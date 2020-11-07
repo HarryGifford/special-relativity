@@ -1,0 +1,11 @@
+{
+  "name": "@hegi/tsconfig",
+  "version": "1.0.0",
+  "description": "Typescript settings for project.",
+  "main": "tsconfig.json",
+  "keywords": [
+    "tsconfig"
+  ],
+  "author": "Harry Gifford",
+  "license": "MIT"
+}

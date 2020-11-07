@@ -1,0 +1,38 @@
+{
+  "name": "create-wasm-app",
+  "version": "0.1.0",
+  "description": "",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "webpack",
+    "build:prod": "NODE_ENV=production webpack",
+    "build:dev": "NODE_ENV=development webpack",
+    "build:profile": "NODE_ENV=production webpack --profile --json > stats.json",
+    "clean": "rimraf dist",
+    "start": "webpack serve"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/HarryGifford/special-relativity",
+    "directory": "./packages/frontend"
+  },
+  "keywords": [
+    "webassembly",
+    "wasm",
+    "rust",
+    "webpack"
+  ],
+  "author": "Harry Gifford <harrygifford92@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "@babylonjs/core": "^4.2.0",
+    "@babylonjs/loaders": "^4.2.0"
+  },
+  "devDependencies": {
+    "copy-webpack-plugin": "^7.0.0",
+    "ts-loader": "^8.0.13",
+    "webpack": "^5.11.1",
+    "webpack-cli": "^4.3.1",
+    "webpack-dev-server": "^3.11.1"
+  }
+}

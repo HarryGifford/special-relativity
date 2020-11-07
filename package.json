@@ -1,0 +1,22 @@
+{
+  "private": true,
+  "name": "rust-wasm-demo",
+  "version": "1.0.0",
+  "description": "A simple demo showing how to set up Rust/WASM with PNPM.",
+  "scripts": {
+    "build": "cd packages/frontend && pnpm run build && cd ../..",
+    "preinstall": "npx only-allow pnpm",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/HarryGifford/rust-wasm-webgl"
+  },
+  "author": "Harry Gifford",
+  "license": "MIT",
+  "devDependencies": {
+    "@hegi/tsconfig": "workspace:*",
+    "rimraf": "^3.0.2",
+    "typescript": "^4.1.3"
+  }
+}
