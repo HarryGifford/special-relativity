@@ -63,7 +63,7 @@ vec3 boost(vec3 pos)
     vec3 v = (view * vec4(-velocity, 0.0)).xyz;
     float delta = length(pos);
     vec4 e2 = vec4(pos.x, pos.y, pos.z, -delta);
-    // Could use `#ifdef` here for a perf boost.
+    // Could use `ifdef` here for a perf boost.
     vec4 e1 = useGalilean == 1 ? galilean(-v) * e2 : lorentz(-v) * e2;
     return e1.xyz;
 }
