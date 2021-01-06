@@ -30,7 +30,7 @@
   },
   "devDependencies": {
     "copy-webpack-plugin": "^7.0.0",
-    "ts-loader": "^8.0.13",
+    "ts-loader": "^8.0.14",
     "webpack": "^5.11.1",
     "webpack-cli": "^4.3.1",
     "webpack-dev-server": "^3.11.1"
