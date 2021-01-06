@@ -4,7 +4,6 @@ precision highp float;
 uniform mat4 worldView;
 
 varying vec4 vPosition;
-varying vec3 vNormal;
 varying vec2 vUV;
 
 uniform sampler2D textureSampler;
@@ -36,8 +35,10 @@ void main(void) {
     // Let's just assume a diffuse surface.
     float intensity = clamp(dot(-e, n), 0.1, 1.);
 
-    vec4 rawAlbedoColor = gammaCorrect(texture2D(textureSampler, vUV).xyzw);
-    vec3 albedoColor = abs(rawAlbedoColor.w) != 0.0 ? rawAlbedoColor.xyz : white;
+    vec4 rawAlbedoColor = gammaCorrect(texture2D(textureSampler, vUV));
+    vec3 albedoColor = abs(rawAlbedoColor.w) != 0.0
+        ? rawAlbedoColor.xyz
+        : white;
 
     vec3 base = intensity * albedoColor;
     vec4 color = vec4(base, 1.0);
