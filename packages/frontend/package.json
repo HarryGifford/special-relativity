@@ -17,9 +17,8 @@
     "directory": "./packages/frontend"
   },
   "keywords": [
-    "webassembly",
-    "wasm",
-    "rust",
+    "special relativity",
+    "glsl",
     "webpack"
   ],
   "author": "Harry Gifford <harrygifford92@gmail.com>",

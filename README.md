@@ -1,15 +1,15 @@
 # special-relativity
 
 This simple project shows how the geometry of the world looks under
-special relativistic transformations.
+special relativistic transformations. You can see a live demo
+[here](https://harrygifford.github.io/special-relativity/). Note that the
+page uses WebGL. If you cannot use WebGL, there is a video
+[here](https://youtu.be/109s5HbdWs0).
 
 [![Approaching a line of cubes at 95% of the speed of light.](./assets/close-to-speed-of-light.png)](https://youtu.be/109s5HbdWs0)
 
-Approaching a line of cubes at 95% of the speed of light.
-
-You can see a live demo
-[here](https://harrygifford.github.io/special-relativity/). Note that the
-page uses WebGL. If you cannot use WebGL, there is a video [here](https://youtu.be/109s5HbdWs0).
+Approaching a line of cubes at 95% of the speed of light. You can see the
+geometric effects of [abberation](https://en.wikipedia.org/wiki/Relativistic_aberration) and [Terrell rotation](https://en.wikipedia.org/wiki/Terrell_rotation).
 
 ## Usage
 
@@ -38,15 +38,14 @@ it's easy to add new packages. You will find the main project under
 `packages/frontend`.
 
 First run `pnpm install` to install all the dependencies and then go to
-`packages/frontend` and run `pnpm run start` to load a web page which will
-then run the rust code.
+`packages/frontend` and run `pnpm run start` to load the page.
 
 ## Overview
 
 The code is under `packages/frontend`.
 
-I am using [babylonjs](https://www.babylonjs.com/) as the engine and to load
-the GLTF model.
+This project uses [babylonjs](https://www.babylonjs.com/) to provide a basic
+engine and to load the GLTF model.
 
 `static/main.vert` is the GLSL shader that applies the Lorentz transform
 to the vertices.
