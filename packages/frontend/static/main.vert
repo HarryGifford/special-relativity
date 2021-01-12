@@ -1,4 +1,5 @@
 precision highp float;
+precision highp int;
 
 // Attributes
 attribute vec3 position;
@@ -19,6 +20,7 @@ uniform int useGalilean;
 
 // Varying
 varying vec4 vPosition;
+varying vec3 vNormal;
 varying vec2 vUV;
 
 /**
@@ -54,6 +56,9 @@ void main()
 {
 #include<instancesVertex>
     vec4 p = vec4(position, 1.);
+    // This assumes no shearing. Otherwise use
+    // inverse-transpose matrix for normals.
+    vNormal = mat3(view * finalWorld) * normal;
     // Transform the point into eye space.
     vec4 vp = view * finalWorld * p;
     // Perform the boost.
