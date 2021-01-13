@@ -6,8 +6,6 @@ attribute vec3 normal;
 attribute vec2 uv;
 
 // Uniforms
-uniform mat4 worldViewProjection;
-uniform mat4 worldView;
 uniform mat4 view;
 uniform mat4 projection;
 uniform vec3 velocity;
@@ -19,6 +17,7 @@ uniform int useGalilean;
 
 // Varying
 varying vec4 vPosition;
+varying vec3 vNormal;
 varying vec2 vUV;
 
 /**
@@ -54,10 +53,13 @@ void main()
 {
 #include<instancesVertex>
     vec4 p = vec4(position, 1.);
+    mat4 worldView = view * finalWorld;
     // Transform the point into eye space.
-    vec4 vp = view * finalWorld * p;
+    vec4 vp = worldView * p;
     // Perform the boost.
     vPosition = vec4(transform(vp.xyz), vp.w);
+    // Assume no shearing. Otherwise the inverse-transpose should be used.
+    vNormal = mat3(worldView) * normal;
     gl_Position = projection * vPosition;
     // Transform the texture coordinate verbatim.
     vUV = uv;
