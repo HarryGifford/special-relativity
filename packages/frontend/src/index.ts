@@ -91,6 +91,7 @@ const main = async () => {
             "velocity",
             "textureSampler",
             "useGalilean",
+            "useNoTimeDelay",
           ],
           defines: albedo != null ? ["#define HAS_TEXTURE"] : [],
         }
@@ -104,7 +105,12 @@ const main = async () => {
 
   // Register a render loop to repeatedly render the scene
   engine.runRenderLoop(function () {
-    const { cameraBeta, galilean, useFixedVelocity } = getState();
+    const {
+      cameraBeta,
+      galilean,
+      useFixedVelocity,
+      useNoTimeDelay,
+    } = getState();
 
     // Set the maximum allowed speed.
     camera.setMaxSpeed(cameraBeta);
@@ -116,6 +122,7 @@ const main = async () => {
     shaders.forEach((shader) => {
       shader
         .setVector3("velocity", velocity)
+        .setInt("useNoTimeDelay", useNoTimeDelay ? 1 : 0)
         .setInt("useGalilean", galilean != null && galilean ? 1 : 0);
     });
     scene.render();

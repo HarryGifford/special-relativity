@@ -31,6 +31,18 @@ joysticks will appear. You can then use these to move around.
 You can also plug in a game controller and use the analog sticks to
 move around.
 
+### Options
+
+When you open the page you will see a bunch of options. They are
+
+**Max camera speed**: Maximum speed the camera can move at. Should be a number above 0 and below 1 where 1 corresponds to the speed of light.
+
+**Assume fixed camera speed**: Assumes the camera is moving forward a fixed velocity relative to the environment but without actually moving the camera.
+
+**Assume no light travel time delay**: Shows the "real" geometry of the objects assuming no time delay. Things will appear stretched when moving left/right because the sensor length contracts horizontally. When moving forward/backward the camera's focal length is length contracted which makes it look like the field of view increases.
+
+**Use Galilean relativity**: Assumes no special relativity. Note that the rasterizer won't render things correctly for speeds greater than the speed of light.
+
 ## Development
 
 There is one main package, although it is structured as a mono-repo so that

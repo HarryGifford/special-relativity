@@ -4,6 +4,8 @@ export type UiState = {
   cameraBeta: number;
   /** Use a fixed velocity as the speed of light. */
   useFixedVelocity: boolean;
+  /** Don't take into account travel time of light to reach camera. */
+  useNoTimeDelay: boolean;
   /**
    * True to transform according to Euclidean space. False for special
    * relativity.
@@ -22,6 +24,7 @@ const saveState = () => {
 const defaultUiState: UiState = {
   cameraBeta: 0.95,
   useFixedVelocity: false,
+  useNoTimeDelay: false,
   galilean: false
 };
 
@@ -49,6 +52,13 @@ const createFixedSpeedToggle = () => {
   const toggle = document.createElement("input");
   toggle.type = "checkbox";
   toggle.checked = uiState.useFixedVelocity;
+  return toggle;
+};
+
+const createNoTimeDelayToggle = () => {
+  const toggle = document.createElement("input");
+  toggle.type = "checkbox";
+  toggle.checked = uiState.useNoTimeDelay;
   return toggle;
 };
 
@@ -86,6 +96,16 @@ export const initUi = (el: HTMLElement) => {
     saveState();
   });
 
+  const noTimeDelayToggle = createNoTimeDelayToggle();
+  noTimeDelayToggle.addEventListener("change", e => {
+    const target = e.target;
+    if (target == null || !(target instanceof HTMLInputElement)) {
+      return;
+    }
+    uiState.useNoTimeDelay = !!target.checked;
+    saveState();
+  })
+
   const galileanToggle = createGalileanToggle();
   galileanToggle.addEventListener("change", (e) => {
     const target = e.target;
@@ -104,6 +124,10 @@ export const initUi = (el: HTMLElement) => {
   sliderLabel.innerText = "Max camera speed (fraction of c):";
   sliderLabel.appendChild(slider);
 
+  const noTimeDelayLabel = document.createElement("label");
+  noTimeDelayLabel.innerText = "Assume no light travel time delay:"
+  noTimeDelayLabel.appendChild(noTimeDelayToggle);
+
   const galileanLabel = document.createElement("label");
   galileanLabel.innerText = "Use Galilean relativity:"
   galileanLabel.appendChild(galileanToggle);
@@ -116,6 +140,7 @@ export const initUi = (el: HTMLElement) => {
   uiEl.appendChild(helptext);
   uiEl.appendChild(sliderLabel);
   uiEl.appendChild(toggleLabel);
+  uiEl.appendChild(noTimeDelayLabel);
   uiEl.appendChild(galileanLabel);
   el.appendChild(uiEl);
 };

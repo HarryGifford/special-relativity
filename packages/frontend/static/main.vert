@@ -11,7 +11,8 @@ uniform mat4 projection;
 uniform vec3 velocity;
 // Set to true to transform according to Euclidean space.
 uniform int useGalilean;
-
+// Set to true to assume no travel time delay for light.
+uniform int useNoTimeDelay;
 // Used for rendering multiple instances of the same mesh.
 #include<instancesDeclaration>
 
@@ -44,7 +45,7 @@ vec3 boost(vec3 v, vec3 x, float t)
 vec3 transform(vec3 pos)
 {
     vec3 v = mat3(view) * velocity;
-    float t = -length(pos);
+    float t = useNoTimeDelay == 1 ? 0. : -length(pos);
     vec3 e = boost(v, pos, t);
     return e;
 }
