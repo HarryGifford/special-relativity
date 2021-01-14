@@ -4,6 +4,8 @@ export declare type UiState = {
     cameraBeta: number;
     /** Use a fixed velocity as the speed of light. */
     useFixedVelocity: boolean;
+    /** Don't take into account travel time of light to reach camera. */
+    useNoTimeDelay: boolean;
     /**
      * True to transform according to Euclidean space. False for special
      * relativity.
