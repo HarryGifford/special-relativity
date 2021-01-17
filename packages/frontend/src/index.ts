@@ -40,7 +40,7 @@ const main = async () => {
 
   const scene = await SceneLoader.LoadAsync(
     window.location.href,
-    "SubdividedCube.gltf",
+    "bike_wheel.gltf",
     engine
   );
 
@@ -92,6 +92,8 @@ const main = async () => {
             "textureSampler",
             "useGalilean",
             "useNoTimeDelay",
+            "time",
+            "cameraPosition"
           ],
           defines: albedo != null ? ["#define HAS_TEXTURE"] : [],
         }
@@ -102,6 +104,10 @@ const main = async () => {
       mesh.material = shaderMaterial;
       return shaderMaterial;
     });
+  const start = new Date().getTime()/1000;
+
+  (window as any).camera = camera;
+
 
   // Register a render loop to repeatedly render the scene
   engine.runRenderLoop(function () {
@@ -122,8 +128,10 @@ const main = async () => {
     shaders.forEach((shader) => {
       shader
         .setVector3("velocity", velocity)
+        .setVector3("cameraPosition", camera.globalPosition)
         .setInt("useNoTimeDelay", useNoTimeDelay ? 1 : 0)
-        .setInt("useGalilean", galilean != null && galilean ? 1 : 0);
+        .setInt("useGalilean", galilean != null && galilean ? 1 : 0)
+        .setFloat("time", new Date().getTime()/(1000) - start);
     });
     scene.render();
   });

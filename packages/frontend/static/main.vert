@@ -6,9 +6,12 @@ attribute vec3 normal;
 attribute vec2 uv;
 
 // Uniforms
+uniform float time;
 uniform mat4 view;
 uniform mat4 projection;
 uniform vec3 velocity;
+uniform vec3 cameraPosition;
+
 // Set to true to transform according to Euclidean space.
 uniform int useGalilean;
 // Set to true to assume no travel time delay for light.
@@ -20,6 +23,16 @@ uniform int useNoTimeDelay;
 varying vec4 vPosition;
 varying vec3 vNormal;
 varying vec2 vUV;
+
+float gammaFactor(float vSq) {
+    float gamma = useGalilean == 1 ? 1. : 1. / sqrt(1. - vSq);
+    return gamma;
+}
+
+float gammaFactorW(float wSq) {
+    float gamma = useGalilean == 1 ? 1. : sqrt(1. + wSq);
+    return gamma;
+}
 
 /**
  * Apply Lorentz/Galilean contraction to the given vector.
@@ -34,7 +47,7 @@ varying vec2 vUV;
 vec3 boost(vec3 v, vec3 x, float t)
 {
     float vSq = dot(v, v);
-    float gamma = useGalilean == 1 ? 1. : 1. / sqrt(1. - vSq);
+    float gamma = gammaFactor(vSq);
     if (vSq <= 1e-4) {
         return x;
     }
@@ -42,23 +55,35 @@ vec3 boost(vec3 v, vec3 x, float t)
 }
 
 /** Transform vertex into the reference frame of the moving camera. */
-vec3 transform(vec3 pos)
+vec3 transform(vec3 pos, vec3 vel)
 {
-    vec3 v = mat3(view) * velocity;
     float t = useNoTimeDelay == 1 ? 0. : -length(pos);
-    vec3 e = boost(v, pos, t);
+    vec3 e = boost(vel, pos, t);
     return e;
 }
 
 void main()
 {
 #include<instancesVertex>
-    vec4 p = vec4(position, 1.);
+    float omega = 0.9;
+    float t = omega * time;
+    vec3 pp = vec3(
+        position.x * cos(t) + position.z * sin(t),
+        position.y,
+        -position.x * sin(t) + position.z * cos(t));
+    vec4 p = vec4(pp, 1.);
+    vec4 px = vec4(-1., 0., 0., 0.);
     mat4 worldView = view * finalWorld;
     // Transform the point into eye space.
-    vec4 vp = worldView * p;
+    vec4 vp = (finalWorld * p + px);
+    vec3 v = omega * cross(pp.xyz, vec3(0., 1., 0.));
+    // v += vec3(omega * 1., 0., 0.);
+    v /= gammaFactorW(dot(v, v));
     // Perform the boost.
-    vPosition = vec4(transform(vp.xyz), vp.w);
+    vec4 vpp = vp;
+    vec3 vvv = mat3(finalWorld) * v;
+    vPosition = view * vec4(transform(vpp.xyz, vvv), vpp.w) - view * px;
+    vPosition = vec4(transform(vPosition.xyz, mat3(view) * velocity), vPosition.w);
     // Assume no shearing. Otherwise the inverse-transpose should be used.
     vNormal = mat3(worldView) * normal;
     gl_Position = projection * vPosition;

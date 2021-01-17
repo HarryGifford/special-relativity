@@ -1,0 +1,182 @@
+{
+    "asset" : {
+        "generator" : "Khronos glTF Blender I/O v1.4.40",
+        "version" : "2.0"
+    },
+    "scene" : 0,
+    "scenes" : [
+        {
+            "name" : "Scene",
+            "nodes" : [
+                0,
+                1,
+                2
+            ]
+        }
+    ],
+    "nodes" : [
+        {
+            "name" : "spokes"
+        },
+        {
+            "mesh" : 0,
+            "name" : "BikeWheel.001",
+            "rotation" : [
+                0,
+                0.3826834559440613,
+                0,
+                0.9238795042037964
+            ]
+        },
+        {
+            "mesh" : 1,
+            "name" : "Torus.002"
+        }
+    ],
+    "meshes" : [
+        {
+            "name" : "BikeWheelMesh.001",
+            "primitives" : [
+                {
+                    "attributes" : {
+                        "POSITION" : 0,
+                        "NORMAL" : 1,
+                        "TEXCOORD_0" : 2
+                    },
+                    "indices" : 3
+                }
+            ]
+        },
+        {
+            "name" : "Torus.002",
+            "primitives" : [
+                {
+                    "attributes" : {
+                        "POSITION" : 4,
+                        "NORMAL" : 5,
+                        "TEXCOORD_0" : 6
+                    },
+                    "indices" : 7
+                }
+            ]
+        }
+    ],
+    "accessors" : [
+        {
+            "bufferView" : 0,
+            "componentType" : 5126,
+            "count" : 1592,
+            "max" : [
+                0.9408906698226929,
+                0.028055209666490555,
+                0.9408907890319824
+            ],
+            "min" : [
+                -0.940890908241272,
+                -0.028055090457201004,
+                -0.9408905506134033
+            ],
+            "type" : "VEC3"
+        },
+        {
+            "bufferView" : 1,
+            "componentType" : 5126,
+            "count" : 1592,
+            "type" : "VEC3"
+        },
+        {
+            "bufferView" : 2,
+            "componentType" : 5126,
+            "count" : 1592,
+            "type" : "VEC2"
+        },
+        {
+            "bufferView" : 3,
+            "componentType" : 5123,
+            "count" : 3072,
+            "type" : "SCALAR"
+        },
+        {
+            "bufferView" : 4,
+            "componentType" : 5126,
+            "count" : 5888,
+            "max" : [
+                1.0700000524520874,
+                0.07000000774860382,
+                1.0700000524520874
+            ],
+            "min" : [
+                -1.0700000524520874,
+                -0.07000000774860382,
+                -1.0700000524520874
+            ],
+            "type" : "VEC3"
+        },
+        {
+            "bufferView" : 5,
+            "componentType" : 5126,
+            "count" : 5888,
+            "type" : "VEC3"
+        },
+        {
+            "bufferView" : 6,
+            "componentType" : 5126,
+            "count" : 5888,
+            "type" : "VEC2"
+        },
+        {
+            "bufferView" : 7,
+            "componentType" : 5123,
+            "count" : 8832,
+            "type" : "SCALAR"
+        }
+    ],
+    "bufferViews" : [
+        {
+            "buffer" : 0,
+            "byteLength" : 19104,
+            "byteOffset" : 0
+        },
+        {
+            "buffer" : 0,
+            "byteLength" : 19104,
+            "byteOffset" : 19104
+        },
+        {
+            "buffer" : 0,
+            "byteLength" : 12736,
+            "byteOffset" : 38208
+        },
+        {
+            "buffer" : 0,
+            "byteLength" : 6144,
+            "byteOffset" : 50944
+        },
+        {
+            "buffer" : 0,
+            "byteLength" : 70656,
+            "byteOffset" : 57088
+        },
+        {
+            "buffer" : 0,
+            "byteLength" : 70656,
+            "byteOffset" : 127744
+        },
+        {
+            "buffer" : 0,
+            "byteLength" : 47104,
+            "byteOffset" : 198400
+        },
+        {
+            "buffer" : 0,
+            "byteLength" : 17664,
+            "byteOffset" : 245504
+        }
+    ],
+    "buffers" : [
+        {
+            "byteLength" : 263168,
+            "uri" : "bike_wheel.bin"
+        }
+    ]
+}
