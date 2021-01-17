@@ -62,17 +62,18 @@ vec3 transform(vec3 pos, vec3 vel)
     return e;
 }
 
+vec3 rotateZ(vec3 v, float t) {
+return vec3(v.x * cos(t) + v.z * sin(t), v.y, -v.x * sin(t) + v.z * cos(t));
+}
+
 void main()
 {
 #include<instancesVertex>
     float omega = 0.9;
     float t = omega * time;
-    vec3 pp = vec3(
-        position.x * cos(t) + position.z * sin(t),
-        position.y,
-        -position.x * sin(t) + position.z * cos(t));
+    vec3 pp = position;//rotateZ(position, t);
     vec4 p = vec4(pp, 1.);
-    vec4 px = vec4(-1., 0., 0., 0.);
+    vec4 px = vec4(-t, 0., 0., 0.);
     mat4 worldView = view * finalWorld;
     // Transform the point into eye space.
     vec4 vp = (finalWorld * p + px);
@@ -81,9 +82,9 @@ void main()
     v /= gammaFactorW(dot(v, v));
     // Perform the boost.
     vec4 vpp = vp;
-    vec3 vvv = mat3(finalWorld) * v;
-    vPosition = view * vec4(transform(vpp.xyz, vvv), vpp.w) - view * px;
-    vPosition = vec4(transform(vPosition.xyz, mat3(view) * velocity), vPosition.w);
+    vec3 vvv = inverse(transpose(mat3(finalWorld))) * v;
+    vec4 vvPosition = view * vec4(transform(vpp.xyz, vvv), vpp.w);// - view * px;
+    vPosition = vec4(transform(vvPosition.xyz, mat3(view) * velocity), vvPosition.w);
     // Assume no shearing. Otherwise the inverse-transpose should be used.
     vNormal = mat3(worldView) * normal;
     gl_Position = projection * vPosition;
