@@ -11,7 +11,7 @@ import {
 import "@babylonjs/loaders/glTF/2.0";
 import { createCanvas } from "./canvas-utils";
 import { loadText } from "./load-text";
-import { getState, initUi } from "./ui";
+import { getState, initUi, initSpeedIndicator } from "./ui";
 import { createCamera } from "./camera";
 
 const main = async () => {
@@ -23,6 +23,8 @@ const main = async () => {
   canvasContainer.style.flex = "1 1 auto";
   document.body.appendChild(canvasContainer);
   const canvas = createCanvas(canvasContainer);
+
+  const speedIndicator = initSpeedIndicator(el);
 
   const [vertexShaderSrc, fragShaderSrc] = await Promise.all([
     loadText("main.vert"),
@@ -128,6 +130,11 @@ const main = async () => {
         .setInt("simultaneityFrame", simultaneityFrame)
         .setInt("useGalilean", galilean != null && galilean ? 1 : 0);
     });
+
+    // Set the speed indicator in the UI.
+    const speed = velocity.length();
+    speedIndicator.innerText = `Speed: ${speed.toFixed(3)}c`;
+
     scene.render();
   });
 

@@ -140,6 +140,13 @@ const createSimultaneityPicker = () => {
   return container;
 }
 
+export const initSpeedIndicator = (el: HTMLElement) => {
+  const speedIndicator = document.createElement("div");
+  speedIndicator.classList.add("speed-indicator");
+  el.appendChild(speedIndicator);
+  return speedIndicator;
+}
+
 /** Element to add the UI to. */
 export const initUi = (el: HTMLElement) => {
   uiState = getState();

@@ -28,10 +28,22 @@ main {
 .main-ui {
   /* Make the ui float on top. */
   position: fixed;
+  top: 3px;
+  left: 3px;
   background-color: hsla(220, 100%, 0%, 0.5);
   color: hsla(220, 100%, 100%, 1.0);
   display: flex;
   flex-direction: column;
   /* Needed because the virtual joystick overrides z-index. */
   z-index: 100;
+}
+
+.speed-indicator {
+  position: fixed;
+  bottom: 3px;
+  right: 3px;
+  background-color: hsla(220, 100%, 0%, 0.5);
+  color: hsla(220, 100%, 100%, 1.0);
+  font-size: x-large;
+  font-family: sans-serif;
 }
