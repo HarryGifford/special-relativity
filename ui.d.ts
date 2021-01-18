@@ -22,6 +22,7 @@ export declare type UiState = {
     simultaneityFrame: SimultaneityFrame;
 };
 export declare const getState: () => UiState;
+export declare const initSpeedIndicator: (el: HTMLElement) => HTMLDivElement;
 /** Element to add the UI to. */
 export declare const initUi: (el: HTMLElement) => void;
 //# sourceMappingURL=ui.d.ts.map
