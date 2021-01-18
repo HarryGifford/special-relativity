@@ -90,6 +90,7 @@ const main = async () => {
             "viewProjection",
             "velocity",
             "textureSampler",
+            "simultaneityFrame",
             "useGalilean",
             "useNoTimeDelay",
           ],
@@ -108,6 +109,7 @@ const main = async () => {
     const {
       cameraBeta,
       galilean,
+      simultaneityFrame,
       useFixedVelocity,
       useNoTimeDelay,
     } = getState();
@@ -123,6 +125,7 @@ const main = async () => {
       shader
         .setVector3("velocity", velocity)
         .setInt("useNoTimeDelay", useNoTimeDelay ? 1 : 0)
+        .setInt("simultaneityFrame", simultaneityFrame)
         .setInt("useGalilean", galilean != null && galilean ? 1 : 0);
     });
     scene.render();

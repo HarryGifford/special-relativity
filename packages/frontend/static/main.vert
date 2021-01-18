@@ -1,5 +1,8 @@
 precision highp float;
 
+#define WORLD_ENUM 0
+#define CAMERA_ENUM 1
+
 // Attributes
 attribute vec3 position;
 attribute vec3 normal;
@@ -9,6 +12,8 @@ attribute vec2 uv;
 uniform mat4 view;
 uniform mat4 projection;
 uniform vec3 velocity;
+// Set to 0 for world frame and for camera frame.
+uniform int simultaneityFrame;
 // Set to true to transform according to Euclidean space.
 uniform int useGalilean;
 // Set to true to assume no travel time delay for light.
@@ -41,11 +46,33 @@ vec3 boost(vec3 v, vec3 x, float t)
     return x + ((gamma - 1.)/vSq * dot(v, x) - t*gamma) * v;
 }
 
+/**
+ * Compute the time the light was emitted from the source vertex that
+ * reaches the camera at time 0.
+ *
+ * This function has a bunch of cases due to the allowed input parameters.
+ */
+float eventTime(vec3 v, vec3 pos) {
+    if (useNoTimeDelay == 1) {
+        if (useGalilean == 1) {
+            return 0.;
+        }
+        switch(simultaneityFrame) {
+            case WORLD_ENUM:
+                return 0.;
+            case CAMERA_ENUM:
+                return dot(v, pos);
+        }
+    } else {
+        return -length(pos);
+    }
+}
+
 /** Transform vertex into the reference frame of the moving camera. */
 vec3 transform(vec3 pos)
 {
     vec3 v = mat3(view) * velocity;
-    float t = useNoTimeDelay == 1 ? 0. : -length(pos);
+    float t = eventTime(v, pos);
     vec3 e = boost(v, pos, t);
     return e;
 }

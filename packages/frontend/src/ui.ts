@@ -1,3 +1,8 @@
+export const enum SimultaneityFrame {
+  world = 0,
+  camera = 1
+}
+
 /** UI configuration used in this demo. */
 export type UiState = {
   /** Fraction of the speed of light the camera is traveling at. */
@@ -11,6 +16,11 @@ export type UiState = {
    * relativity.
    */
   galilean: boolean;
+  /**
+   * Used with `useNoTimeDelay` to define which frame to use to define
+   * when events are simultaneous.
+   */
+  simultaneityFrame: SimultaneityFrame;
 };
 
 /**
@@ -25,7 +35,8 @@ const defaultUiState: UiState = {
   cameraBeta: 0.95,
   useFixedVelocity: false,
   useNoTimeDelay: false,
-  galilean: false
+  galilean: false,
+  simultaneityFrame: SimultaneityFrame.world
 };
 
 export const getState = (): UiState => {
@@ -69,6 +80,66 @@ const createGalileanToggle = () => {
   return toggle;
 };
 
+const createSimultaneityPicker = () => {
+  const container = document.createElement("div");
+
+  const noTimeDelayLabel = document.createElement("label");
+  const noTimeDelayToggle = createNoTimeDelayToggle();
+  noTimeDelayLabel.appendChild(noTimeDelayToggle);
+  noTimeDelayLabel.append("Assume no light travel time in frame:")
+  container.appendChild(noTimeDelayLabel);
+
+  const button1 = document.createElement("input");
+  button1.name = "simultaneity-frame";
+  button1.type = "radio";
+  button1.disabled = !uiState.useNoTimeDelay;
+  button1.checked = uiState.simultaneityFrame === SimultaneityFrame.world;
+  button1.value = `${SimultaneityFrame.world}`;
+  const button1Label = document.createElement("label");
+  button1Label.appendChild(button1);
+  button1Label.append("World");
+
+  const button2 = document.createElement("input");
+  button2.name = "simultaneity-frame";
+  button2.type = "radio";
+  button2.disabled = !uiState.useNoTimeDelay;
+  button2.checked = uiState.simultaneityFrame === SimultaneityFrame.camera;
+  button2.value = `${SimultaneityFrame.camera}`;
+  const button2Label = document.createElement("label");
+  button2Label.appendChild(button2);
+  button2Label.append("Camera");
+
+  noTimeDelayToggle.addEventListener("change", e => {
+    const target = e.target;
+    if (target == null || !(target instanceof HTMLInputElement)) {
+      return;
+    }
+    const useNoTimeDelay = !!target.checked;
+    uiState.useNoTimeDelay = useNoTimeDelay;
+    saveState();
+
+    button1.disabled = !useNoTimeDelay;
+    button2.disabled = !useNoTimeDelay;
+  });
+
+  const onClick = (e: MouseEvent) => {
+    const target = e.target;
+    if (target == null || !(target instanceof HTMLInputElement)) {
+      return;
+    }
+    const value = parseInt(target.value, 10) as SimultaneityFrame;
+    uiState.simultaneityFrame = value;
+    saveState();
+  }
+  button1.onclick = onClick;
+  button2.onclick = onClick;
+
+  container.appendChild(button1Label);
+  container.appendChild(button2Label);
+
+  return container;
+}
+
 /** Element to add the UI to. */
 export const initUi = (el: HTMLElement) => {
   uiState = getState();
@@ -92,19 +163,10 @@ export const initUi = (el: HTMLElement) => {
     if (target == null || !(target instanceof HTMLInputElement)) {
       return;
     }
-    uiState.useFixedVelocity = target.checked;
+    const useFixedVelocity = target.checked;
+    uiState.useFixedVelocity = useFixedVelocity;
     saveState();
   });
-
-  const noTimeDelayToggle = createNoTimeDelayToggle();
-  noTimeDelayToggle.addEventListener("change", e => {
-    const target = e.target;
-    if (target == null || !(target instanceof HTMLInputElement)) {
-      return;
-    }
-    uiState.useNoTimeDelay = !!target.checked;
-    saveState();
-  })
 
   const galileanToggle = createGalileanToggle();
   galileanToggle.addEventListener("change", (e) => {
@@ -116,21 +178,19 @@ export const initUi = (el: HTMLElement) => {
     saveState();
   })
 
-  const toggleLabel = document.createElement("label");
-  toggleLabel.innerText = "Assume fixed camera speed:";
-  toggleLabel.appendChild(toggle);
-
   const sliderLabel = document.createElement("label");
-  sliderLabel.innerText = "Max camera speed (fraction of c):";
   sliderLabel.appendChild(slider);
+  sliderLabel.append("Max camera speed (fraction of c)");
 
-  const noTimeDelayLabel = document.createElement("label");
-  noTimeDelayLabel.innerText = "Assume no light travel time delay:"
-  noTimeDelayLabel.appendChild(noTimeDelayToggle);
+  const toggleLabel = document.createElement("label");
+  toggleLabel.appendChild(toggle);
+  toggleLabel.append("Assume fixed camera speed");
 
   const galileanLabel = document.createElement("label");
-  galileanLabel.innerText = "Use Galilean relativity:"
   galileanLabel.appendChild(galileanToggle);
+  galileanLabel.append("Use Galilean relativity");
+
+  const simultaneityPicker = createSimultaneityPicker();
 
   const uiEl = document.createElement("div");
   uiEl.className = "main-ui";
@@ -139,8 +199,8 @@ export const initUi = (el: HTMLElement) => {
   helptext.innerText = "Use WASD and mouse to move or touch on smartphone."
   uiEl.appendChild(helptext);
   uiEl.appendChild(sliderLabel);
+  uiEl.appendChild(simultaneityPicker);
   uiEl.appendChild(toggleLabel);
-  uiEl.appendChild(noTimeDelayLabel);
   uiEl.appendChild(galileanLabel);
   el.appendChild(uiEl);
 };

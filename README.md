@@ -37,9 +37,13 @@ When you open the page you will see a bunch of options. They are
 
 **Max camera speed**: Maximum speed the camera can move at. Should be a number above 0 and below 1 where 1 corresponds to the speed of light.
 
-**Assume fixed camera speed**: Assumes the camera is moving forward a fixed velocity relative to the environment but without actually moving the camera.
+**Assume no light travel time**: Shows the geometry of the objects assuming no time delay. This requires us to assume a reference frame because the "now" slice will be different in different reference frames. There are two obvious choices:
 
-**Assume no light travel time delay**: Shows the "real" geometry of the objects assuming no time delay. Things will appear stretched when moving left/right because the sensor length contracts horizontally. When moving forward/backward the camera's focal length is length contracted which makes it look like the field of view increases.
+- Camera: Assume the world is moving and the camera is at rest. This means the world will look
+  compressed in the direction perpendicular to the direction of motion.
+- World: Assume the world is at rest and the camera is moving. In this case the camera's sensor is length contracted, but the light entering the camera is not. This means objects will appear stretched because the light from an object will be spread over a larger portion of the sensor.
+
+**Assume fixed camera speed**: Assumes the camera is moving forward a fixed velocity relative to the environment but without actually moving the camera.
 
 **Use Galilean relativity**: Assumes no special relativity. Note that the rasterizer won't render things correctly for speeds greater than the speed of light.
 
