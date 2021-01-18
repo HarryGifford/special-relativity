@@ -45,7 +45,7 @@ vec3 boost(vec3 v, vec3 x, float t)
 vec3 transform(vec3 pos)
 {
     vec3 v = mat3(view) * velocity;
-    float t = useNoTimeDelay == 1 ? 0. : -length(pos);
+    float t = useNoTimeDelay == 1 ? useGalilean == 1 ? 0. : dot(v, pos) : -length(pos);
     vec3 e = boost(v, pos, t);
     return e;
 }
