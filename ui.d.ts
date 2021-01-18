@@ -1,3 +1,7 @@
+export declare const enum SimultaneityFrame {
+    world = 0,
+    camera = 1
+}
 /** UI configuration used in this demo. */
 export declare type UiState = {
     /** Fraction of the speed of light the camera is traveling at. */
@@ -11,6 +15,11 @@ export declare type UiState = {
      * relativity.
      */
     galilean: boolean;
+    /**
+     * Used with `useNoTimeDelay` to define which frame to use to define
+     * when events are simultaneous.
+     */
+    simultaneityFrame: SimultaneityFrame;
 };
 export declare const getState: () => UiState;
 /** Element to add the UI to. */
