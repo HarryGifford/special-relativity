@@ -16,6 +16,11 @@ main {
   height: 100%;
   height: -webkit-fill-available;
   margin: 0;
+  /* user-select needed to prevent highlighting on long taps on iOS. */
+  user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -webkit-user-select: none;
 }
 
 .main-canvas {
