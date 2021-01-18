@@ -53,6 +53,7 @@ const createSpeedSlider = () => {
   slider.min = "0";
   slider.max = "1";
   slider.step = "0.005";
+  slider.inputMode = "decimal";
   slider.value = uiState.cameraBeta?.toString();
   slider.title =
     "Camera speed as a fraction of the speed of light."

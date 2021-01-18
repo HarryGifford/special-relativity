@@ -57,11 +57,10 @@ float eventTime(vec3 v, vec3 pos) {
         if (useGalilean == 1) {
             return 0.;
         }
-        switch(simultaneityFrame) {
-            case WORLD_ENUM:
-                return 0.;
-            case CAMERA_ENUM:
-                return dot(v, pos);
+        if (simultaneityFrame == WORLD_ENUM) {
+            return 0.;
+        } else {
+            return dot(v, pos);
         }
     } else {
         return -length(pos);
