@@ -20,6 +20,10 @@ export declare type UiState = {
      * when events are simultaneous.
      */
     simultaneityFrame: SimultaneityFrame;
+    /** Set to true to enable relativistic beaming. */
+    relativisticBeaming: boolean;
+    /** Set to true to doppler shift the wavelength of light. */
+    dopplerEffect: boolean;
 };
 export declare const getState: () => UiState;
 export declare const initSpeedIndicator: (el: HTMLElement) => HTMLDivElement;

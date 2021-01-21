@@ -26,6 +26,8 @@ varying vec4 vPosition;
 varying vec3 vNormal;
 varying vec2 vUV;
 
+varying float abberationFactor;
+
 /**
  * Apply Lorentz/Galilean contraction to the given vector.
  *
@@ -39,11 +41,22 @@ varying vec2 vUV;
 vec3 boost(vec3 v, vec3 x, float t)
 {
     float vSq = dot(v, v);
-    float gamma = useGalilean == 1 ? 1. : 1. / sqrt(1. - vSq);
+    float invGamma = useGalilean == 1 ? 1. : sqrt(1. - vSq);
+    float vx = dot(v, x);
+
     if (vSq <= 1e-4) {
         return x;
     }
-    return x + ((gamma - 1.)/vSq * dot(v, x) - t*gamma) * v;
+    float gamma = 1. / invGamma;
+    return x + ((gamma - 1.)/vSq * vx - t*gamma) * v;
+}
+
+void computeAbberation(vec3 x, vec3 v) {
+    float vSq = dot(v, v);
+    float invGamma = useGalilean == 1 ? 1. : sqrt(1. - vSq);
+    float vx = dot(v, x);
+    float vxn = vx / length(x);
+    abberationFactor = useGalilean == 1 ? 1. + vxn : invGamma / (1. - vxn);
 }
 
 /**
@@ -52,27 +65,33 @@ vec3 boost(vec3 v, vec3 x, float t)
  *
  * This function has a bunch of cases due to the allowed input parameters.
  */
-float eventTime(vec3 v, vec3 pos) {
+float eventTime(vec3 x, vec3 v) {
     if (useNoTimeDelay == 1) {
         if (useGalilean == 1) {
             return 0.;
         }
         if (simultaneityFrame == WORLD_ENUM) {
+            // Simultaneous events in the world frame.
             return 0.;
         } else {
-            return dot(v, pos);
+            // Simultaneous events in the camera's frame.
+            // Solve t' = gamma * (t - <v,x>), where t' = 0,
+            // gives us t = <v,x>.
+            return dot(v, x);
         }
     } else {
-        return -length(pos);
+        // Time taken for light to reach the camera is just the distance
+        // to reach the point where the light was emitted. Here we assume
+        // the camera is located at the origin.
+        return -length(x);
     }
 }
 
 /** Transform vertex into the reference frame of the moving camera. */
-vec3 transform(vec3 pos)
+vec3 transform(vec3 x, vec3 v)
 {
-    vec3 v = mat3(view) * velocity;
-    float t = eventTime(v, pos);
-    vec3 e = boost(v, pos, t);
+    float t = eventTime(x, v);
+    vec3 e = boost(v, x, t);
     return e;
 }
 
@@ -83,8 +102,10 @@ void main()
     mat4 worldView = view * finalWorld;
     // Transform the point into eye space.
     vec4 vp = worldView * p;
+    vec3 v = mat3(view) * velocity;
     // Perform the boost.
-    vPosition = vec4(transform(vp.xyz), vp.w);
+    vPosition = vec4(transform(vp.xyz, v), vp.w);
+    computeAbberation(vp.xyz, v);
     // Assume no shearing. Otherwise the inverse-transpose should be used.
     vNormal = mat3(worldView) * normal;
     gl_Position = projection * vPosition;
