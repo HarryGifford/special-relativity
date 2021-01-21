@@ -37,6 +37,11 @@ When you open the page you will see a bunch of options. They are
 
 **Max camera speed**: Maximum speed the camera can move at. Should be a number above 0 and below 1 where 1 corresponds to the speed of light.
 
+**Relativistic beaming**: Shows the ["headlight effect"](https://en.wikipedia.org/wiki/Relativistic_beaming) where various effects cause the luminosity of
+different objects to change with velocity.
+
+**Doppler effect**: Shows the [Relativistic Doppler effect](https://en.wikipedia.org/wiki/Relativistic_Doppler_effect).
+
 **Assume no light travel time**: Shows the geometry of the objects assuming no time delay. This requires us to assume a reference frame because the "now" slice will be different in different reference frames. There are two obvious choices:
 
 - Camera: Assume the world is moving and the camera is at rest. This means the world will look

@@ -21,6 +21,10 @@ export type UiState = {
    * when events are simultaneous.
    */
   simultaneityFrame: SimultaneityFrame;
+  /** Set to true to enable relativistic beaming. */
+  relativisticBeaming: boolean;
+  /** Set to true to doppler shift the wavelength of light. */
+  dopplerEffect: boolean;
 };
 
 /**
@@ -36,7 +40,9 @@ const defaultUiState: UiState = {
   useFixedVelocity: false,
   useNoTimeDelay: false,
   galilean: false,
-  simultaneityFrame: SimultaneityFrame.world
+  simultaneityFrame: SimultaneityFrame.world,
+  relativisticBeaming: false,
+  dopplerEffect: false
 };
 
 export const getState = (): UiState => {
@@ -78,6 +84,20 @@ const createGalileanToggle = () => {
   const toggle = document.createElement("input");
   toggle.type = "checkbox";
   toggle.checked = uiState.galilean;
+  return toggle;
+};
+
+const createRelativisticBeamingToggle = () => {
+  const toggle = document.createElement("input");
+  toggle.type = "checkbox";
+  toggle.checked = uiState.relativisticBeaming;
+  return toggle;
+};
+
+const createDopplerEffectToggle = () => {
+  const toggle = document.createElement("input");
+  toggle.type = "checkbox";
+  toggle.checked = uiState.dopplerEffect;
   return toggle;
 };
 
@@ -186,6 +206,26 @@ export const initUi = (el: HTMLElement) => {
     saveState();
   })
 
+  const relativisticBeamingToggle = createRelativisticBeamingToggle();
+  relativisticBeamingToggle.addEventListener("change", (e) => {
+    const target = e.target;
+    if (target == null || !(target instanceof HTMLInputElement)) {
+      return;
+    }
+    uiState.relativisticBeaming = !!target.checked;
+    saveState();
+  });
+
+  const dopplerEffectToggle = createDopplerEffectToggle();
+  dopplerEffectToggle.addEventListener("change", (e) => {
+    const target = e.target;
+    if (target == null || !(target instanceof HTMLInputElement)) {
+      return;
+    }
+    uiState.dopplerEffect = !!target.checked;
+    saveState();
+  });
+
   const sliderLabel = document.createElement("label");
   sliderLabel.appendChild(slider);
   sliderLabel.append("Max camera speed (fraction of c)");
@@ -198,6 +238,14 @@ export const initUi = (el: HTMLElement) => {
   galileanLabel.appendChild(galileanToggle);
   galileanLabel.append("Use Galilean relativity");
 
+  const relativisticBeamingLabel = document.createElement("label");
+  relativisticBeamingLabel.appendChild(relativisticBeamingToggle);
+  relativisticBeamingLabel.append("Relativistic beaming");
+
+  const dopplerEffectLabel = document.createElement("label");
+  dopplerEffectLabel.appendChild(dopplerEffectToggle);
+  dopplerEffectLabel.append("Doppler effect");
+
   const simultaneityPicker = createSimultaneityPicker();
 
   const uiEl = document.createElement("div");
@@ -207,6 +255,8 @@ export const initUi = (el: HTMLElement) => {
   helptext.innerText = "Use WASD and mouse to move or touch on smartphone."
   uiEl.appendChild(helptext);
   uiEl.appendChild(sliderLabel);
+  uiEl.appendChild(relativisticBeamingLabel);
+  uiEl.appendChild(dopplerEffectLabel);
   uiEl.appendChild(simultaneityPicker);
   uiEl.appendChild(toggleLabel);
   uiEl.appendChild(galileanLabel);

@@ -7,6 +7,7 @@ import {
   ShaderMaterial,
   TransformNode,
   Vector3,
+  Texture
 } from "@babylonjs/core";
 import "@babylonjs/loaders/glTF/2.0";
 import { createCanvas } from "./canvas-utils";
@@ -62,6 +63,7 @@ const main = async () => {
   camera.attachControl(true);
 
   scene.clearColor.set(0.2, 0.3, 0.6, 1);
+  const rgbMapTexture = new Texture("./lambda_rgb_map.png", scene, false, undefined, Texture.BILINEAR_SAMPLINGMODE);
 
   // Need to skip this due to movement of vertices from relativistic
   // corrections.
@@ -95,10 +97,14 @@ const main = async () => {
             "simultaneityFrame",
             "useGalilean",
             "useNoTimeDelay",
+            "rgbMapSampler",
+            "dopplerEffect",
+            "relativisticBeaming"
           ],
           defines: albedo != null ? ["#define HAS_TEXTURE"] : [],
         }
       );
+      shaderMaterial.setTexture("rgbMapSampler", rgbMapTexture);
       if (albedo != null) {
         shaderMaterial.setTexture("textureSampler", albedo);
       }
@@ -114,6 +120,8 @@ const main = async () => {
       simultaneityFrame,
       useFixedVelocity,
       useNoTimeDelay,
+      relativisticBeaming,
+      dopplerEffect
     } = getState();
 
     // Set the maximum allowed speed.
@@ -128,9 +136,10 @@ const main = async () => {
         .setVector3("velocity", velocity)
         .setInt("useNoTimeDelay", useNoTimeDelay ? 1 : 0)
         .setInt("simultaneityFrame", simultaneityFrame)
-        .setInt("useGalilean", galilean != null && galilean ? 1 : 0);
+        .setInt("useGalilean", galilean ? 1 : 0)
+        .setInt("relativisticBeaming", relativisticBeaming ? 1 : 0)
+        .setInt("dopplerEffect", dopplerEffect ? 1 : 0);
     });
-
     // Set the speed indicator in the UI.
     const speed = velocity.length();
     speedIndicator.innerText = `Speed: ${speed.toFixed(3)}c`;
