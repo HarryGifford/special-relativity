@@ -1,8 +1,8 @@
 # special-relativity
 
-This simple project shows how the geometry of the world looks under
+This project shows how the geometry of the world looks under
 special relativistic transformations. You can see a live demo
-[here](https://harrygifford.github.io/special-relativity/). Note that the
+[here](https://harrygifford.github.io/special-relativity/). You can see effects such as Terrell rotation, Doppler shifting and the headlight effect. Note that the
 page uses WebGL. If you cannot use WebGL, there is a video
 [here](https://youtu.be/109s5HbdWs0).
 
@@ -60,6 +60,11 @@ it's easy to add new packages. You will find the main project under
 
 First run `pnpm install` to install all the dependencies and then go to
 `packages/frontend` and run `pnpm run start` to load the page.
+
+The directory `utils` contains packages related to development or that
+only need to be built/executed infrequently. For example
+`wavelength-color-map` is used to generate the texture for mapping
+Doppler shifted colors.
 
 ## Overview
 

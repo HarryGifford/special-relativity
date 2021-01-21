@@ -1,8 +1,8 @@
 {
   "private": true,
-  "name": "rust-wasm-demo",
+  "name": "special-relativity",
   "version": "1.0.0",
-  "description": "A simple demo showing how to set up Rust/WASM with PNPM.",
+  "description": "WebGL demo to View effects of special relativity such as Terrell rotation, relativistic beaming and Doppler shift.",
   "scripts": {
     "build": "cd packages/frontend && pnpm run build:prod && cd ../..",
     "preinstall": "npx only-allow pnpm",
@@ -14,6 +14,9 @@
   },
   "keywords": [
     "special relativity",
+    "terrell rotation",
+    "relativistic effects",
+    "doppler",
     "glsl",
     "webpack"
   ],

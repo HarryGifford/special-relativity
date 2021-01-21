@@ -1,0 +1,28 @@
+{
+  "private": true,
+  "name": "wavelength-color-map",
+  "version": "1.0.0",
+  "description": "Generate a mapping texture from wavelength to RGB color.",
+  "scripts": {
+    "build": "",
+    "preinstall": "npx only-allow pnpm",
+    "run": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/HarryGifford/special-relativity",
+    "directory": "./utils/wavelength-color-map"
+  },
+  "keywords": [
+    "sRGB",
+    "CIE"
+  ],
+  "author": "Harry Gifford <harrygifford92@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "@types/pngjs": "^3.4.2",
+    "node-fetch": "^2.6.1",
+    "pngjs": "^6.0.0"
+  }
+}
