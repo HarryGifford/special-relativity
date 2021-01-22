@@ -40,7 +40,7 @@ const defaultUiState: UiState = {
   useFixedVelocity: false,
   useNoTimeDelay: false,
   galilean: false,
-  simultaneityFrame: SimultaneityFrame.world,
+  simultaneityFrame: SimultaneityFrame.camera,
   relativisticBeaming: false,
   dopplerEffect: false
 };
@@ -110,25 +110,25 @@ const createSimultaneityPicker = () => {
   noTimeDelayLabel.append("Assume no light travel time in frame:")
   container.appendChild(noTimeDelayLabel);
 
-  const button1 = document.createElement("input");
-  button1.name = "simultaneity-frame";
-  button1.type = "radio";
-  button1.disabled = !uiState.useNoTimeDelay;
-  button1.checked = uiState.simultaneityFrame === SimultaneityFrame.world;
-  button1.value = `${SimultaneityFrame.world}`;
-  const button1Label = document.createElement("label");
-  button1Label.appendChild(button1);
-  button1Label.append("World");
+  const cameraButton = document.createElement("input");
+  cameraButton.name = "simultaneity-frame";
+  cameraButton.type = "radio";
+  cameraButton.disabled = !uiState.useNoTimeDelay;
+  cameraButton.checked = uiState.simultaneityFrame === SimultaneityFrame.camera;
+  cameraButton.value = `${SimultaneityFrame.camera}`;
+  const cameraButtonLabel = document.createElement("label");
+  cameraButtonLabel.appendChild(cameraButton);
+  cameraButtonLabel.append("Camera");
 
-  const button2 = document.createElement("input");
-  button2.name = "simultaneity-frame";
-  button2.type = "radio";
-  button2.disabled = !uiState.useNoTimeDelay;
-  button2.checked = uiState.simultaneityFrame === SimultaneityFrame.camera;
-  button2.value = `${SimultaneityFrame.camera}`;
-  const button2Label = document.createElement("label");
-  button2Label.appendChild(button2);
-  button2Label.append("Camera");
+  const worldButton = document.createElement("input");
+  worldButton.name = "simultaneity-frame";
+  worldButton.type = "radio";
+  worldButton.disabled = !uiState.useNoTimeDelay;
+  worldButton.checked = uiState.simultaneityFrame === SimultaneityFrame.world;
+  worldButton.value = `${SimultaneityFrame.world}`;
+  const worldButtonLabel = document.createElement("label");
+  worldButtonLabel.appendChild(worldButton);
+  worldButtonLabel.append("World");
 
   noTimeDelayToggle.addEventListener("change", e => {
     const target = e.target;
@@ -139,8 +139,8 @@ const createSimultaneityPicker = () => {
     uiState.useNoTimeDelay = useNoTimeDelay;
     saveState();
 
-    button1.disabled = !useNoTimeDelay;
-    button2.disabled = !useNoTimeDelay;
+    worldButton.disabled = !useNoTimeDelay;
+    cameraButton.disabled = !useNoTimeDelay;
   });
 
   const onClick = (e: MouseEvent) => {
@@ -152,11 +152,11 @@ const createSimultaneityPicker = () => {
     uiState.simultaneityFrame = value;
     saveState();
   }
-  button1.onclick = onClick;
-  button2.onclick = onClick;
+  worldButton.onclick = onClick;
+  cameraButton.onclick = onClick;
 
-  container.appendChild(button1Label);
-  container.appendChild(button2Label);
+  container.appendChild(worldButtonLabel);
+  container.appendChild(cameraButtonLabel);
 
   return container;
 }
@@ -248,8 +248,11 @@ export const initUi = (el: HTMLElement) => {
 
   const simultaneityPicker = createSimultaneityPicker();
 
-  const uiEl = document.createElement("div");
+  const uiEl = document.createElement("details");
   uiEl.className = "main-ui";
+  const summaryEl = document.createElement("summary");
+  summaryEl.innerText = "Help / Settings"
+  uiEl.appendChild(summaryEl);
 
   const helptext = document.createElement("div");
   helptext.innerText = "Use WASD and mouse to move or touch on smartphone."
