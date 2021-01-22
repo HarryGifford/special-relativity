@@ -1,4 +1,5 @@
 precision highp float;
+precision highp int;
 
 #define WORLD_ENUM 0
 #define CAMERA_ENUM 1
@@ -26,8 +27,6 @@ varying vec4 vPosition;
 varying vec3 vNormal;
 varying vec2 vUV;
 
-varying float abberationFactor;
-
 /**
  * Apply Lorentz/Galilean contraction to the given vector.
  *
@@ -49,14 +48,6 @@ vec3 boost(vec3 v, vec3 x, float t)
     }
     float gamma = 1. / invGamma;
     return x + ((gamma - 1.)/vSq * vx - t*gamma) * v;
-}
-
-void computeAbberation(vec3 x, vec3 v) {
-    float vSq = dot(v, v);
-    float invGamma = useGalilean == 1 ? 1. : sqrt(1. - vSq);
-    float vx = dot(v, x);
-    float vxn = vx / length(x);
-    abberationFactor = useGalilean == 1 ? 1. + vxn : invGamma / (1. - vxn);
 }
 
 /**
@@ -88,15 +79,13 @@ float eventTime(vec3 x, vec3 v) {
 }
 
 /** Transform vertex into the reference frame of the moving camera. */
-vec3 transform(vec3 x, vec3 v)
-{
+vec3 transform(vec3 x, vec3 v) {
     float t = eventTime(x, v);
     vec3 e = boost(v, x, t);
     return e;
 }
 
-void main()
-{
+void main() {
 #include<instancesVertex>
     vec4 p = vec4(position, 1.);
     mat4 worldView = view * finalWorld;
@@ -105,7 +94,6 @@ void main()
     vec3 v = mat3(view) * velocity;
     // Perform the boost.
     vPosition = vec4(transform(vp.xyz, v), vp.w);
-    computeAbberation(vp.xyz, v);
     // Assume no shearing. Otherwise the inverse-transpose should be used.
     vNormal = mat3(worldView) * normal;
     gl_Position = projection * vPosition;

@@ -23,6 +23,11 @@ main {
   -webkit-user-select: none;
 }
 
+body {
+  display: flex;
+  flex-direction: column;
+}
+
 .main-canvas {
   width: 100vw;
   width: -webkit-fill-available;
@@ -41,6 +46,14 @@ main {
   flex-direction: column;
   /* Needed because the virtual joystick overrides z-index. */
   z-index: 100;
+  padding: 2px 4px;
+  border-radius: 2px;
+  font-family: sans-serif;
+}
+
+/** Title of the collapsible block. */
+details.main-ui summary {
+  font-size: large;
 }
 
 .speed-indicator {
@@ -51,4 +64,6 @@ main {
   color: hsla(220, 100%, 100%, 1.0);
   font-size: x-large;
   font-family: sans-serif;
+  padding: 2px 4px;
+  border-radius: 2px;
 }
