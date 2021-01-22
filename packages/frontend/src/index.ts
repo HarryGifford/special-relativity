@@ -7,18 +7,18 @@ import {
   ShaderMaterial,
   TransformNode,
   Vector3,
-  Texture
+  Texture,
 } from "@babylonjs/core";
 import "@babylonjs/loaders/glTF/2.0";
 import { createCanvas } from "./canvas-utils";
 import { loadText } from "./load-text";
 import { getState, initUi, initSpeedIndicator } from "./ui";
 import { createCamera } from "./camera";
+import { makeSkybox } from "./skybox";
+import { getUniformParams, setUniforms } from "./utils";
 
 const main = async () => {
   const el = document.body;
-  el.style.display = "flex";
-  el.style.flexDirection = "column";
   initUi(el);
   const canvasContainer = document.createElement("div");
   canvasContainer.style.flex = "1 1 auto";
@@ -62,8 +62,13 @@ const main = async () => {
   // This attaches the camera to the canvas
   camera.attachControl(true);
 
-  scene.clearColor.set(0.2, 0.3, 0.6, 1);
-  const rgbMapTexture = new Texture("./lambda_rgb_map.png", scene, false, undefined, Texture.BILINEAR_SAMPLINGMODE);
+  const rgbMapTexture = new Texture(
+    "./lambda_rgb_map.png",
+    scene,
+    false,
+    undefined,
+    Texture.BILINEAR_SAMPLINGMODE
+  );
 
   // Need to skip this due to movement of vertices from relativistic
   // corrections.
@@ -99,7 +104,7 @@ const main = async () => {
             "useNoTimeDelay",
             "rgbMapSampler",
             "dopplerEffect",
-            "relativisticBeaming"
+            "relativisticBeaming",
           ],
           defines: albedo != null ? ["#define HAS_TEXTURE"] : [],
         }
@@ -112,34 +117,22 @@ const main = async () => {
       return shaderMaterial;
     });
 
+  // Skybox is used so that we correctly shade the environment at infinity.
+  const { skyboxMaterial } = await makeSkybox(scene);
+  skyboxMaterial.setTexture("rgbMapSampler", rgbMapTexture);
+
   // Register a render loop to repeatedly render the scene
   engine.runRenderLoop(function () {
-    const {
-      cameraBeta,
-      galilean,
-      simultaneityFrame,
-      useFixedVelocity,
-      useNoTimeDelay,
-      relativisticBeaming,
-      dopplerEffect
-    } = getState();
-
+    const { cameraBeta } = getState();
     // Set the maximum allowed speed.
     camera.setMaxSpeed(cameraBeta);
-
-    let velocity =
-      camera.velocity == null || useFixedVelocity
-        ? camera.getDirection(Vector3.Forward()).scale(cameraBeta)
-        : camera.velocity;
+    const uniformParams = getUniformParams(camera);
+    setUniforms(skyboxMaterial, uniformParams);
     shaders.forEach((shader) => {
-      shader
-        .setVector3("velocity", velocity)
-        .setInt("useNoTimeDelay", useNoTimeDelay ? 1 : 0)
-        .setInt("simultaneityFrame", simultaneityFrame)
-        .setInt("useGalilean", galilean ? 1 : 0)
-        .setInt("relativisticBeaming", relativisticBeaming ? 1 : 0)
-        .setInt("dopplerEffect", dopplerEffect ? 1 : 0);
+      setUniforms(shader, uniformParams);
     });
+
+    const velocity = uniformParams.vec3.velocity;
     // Set the speed indicator in the UI.
     const speed = velocity.length();
     speedIndicator.innerText = `Speed: ${speed.toFixed(3)}c`;

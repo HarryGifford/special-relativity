@@ -3,7 +3,7 @@ precision highp float;
 precision highp int;
 
 /**
-    A lot of this code is shared with `skybox.frag`. If you update here
+    A lot of this code is shared with `main.frag`. If you update here
     it's likely you will need to update there too.
 
     A lot of the code below is pretty hacky in terms of computing the
@@ -34,28 +34,9 @@ uniform int relativisticBeaming;
 uniform int dopplerEffect;
 
 varying vec4 vPosition;
-varying vec3 vNormal;
-varying vec2 vUV;
 
-uniform sampler2D textureSampler;
+uniform samplerCube skyboxSampler;
 uniform sampler2D rgbMapSampler;
-
-// Hardcoded directional light source.
-const vec3 light_dir = vec3(-3.0, 5., -4.);
-
-vec3 white = vec3(0.0);
-
-vec4 gammaCorrect(vec4 color) {
-    return vec4(pow(color.rgb, vec3(2.2)), color.a);
-}
-
-vec4 unGammaCorrect(vec4 color) {
-    return vec4(pow(color.rgb, vec3(1.0/2.2)), color.a);
-}
-
-vec3 computeNormal() {
-    return normalize(vNormal);
-}
 
 float computeAbberationFromXV(vec3 x, vec3 v) {
     float vSq = dot(v, v);
@@ -73,6 +54,16 @@ float computeAbberation() {
     vec3 x = normalize(vPosition.xyz);
     vec3 v = mat3(view) * velocity;
     return computeAbberationFromXV(x, v);
+}
+
+vec3 white = vec3(0.0);
+
+vec4 gammaCorrect(vec4 color) {
+    return vec4(pow(color.rgb, vec3(2.2)), color.a);
+}
+
+vec4 unGammaCorrect(vec4 color) {
+    return vec4(pow(color.rgb, vec3(1.0/2.2)), color.a);
 }
 
 float transformWavelength(float lambda, float abberationFactor) {
@@ -98,13 +89,8 @@ float transformIntensity(float intensity, float abberationFactor) {
 }
 
 void main(void) {
-    // Light direction.
-    vec3 light = normalize(mat3(view) * light_dir);
-    // Surface normal.
-    vec3 n = computeNormal();
-    // Let's just assume a diffuse surface.
-    float intensity = clamp(dot(light, n), 0.1, 1.);
-    vec4 rawAlbedoColor = gammaCorrect(texture2D(textureSampler, vUV));
+    float intensity = 1.;
+    vec4 rawAlbedoColor = gammaCorrect(textureCube(skyboxSampler, vPosition.xyz));
 
     float abberationFactor = computeAbberation();
 
