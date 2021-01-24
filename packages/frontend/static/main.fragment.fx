@@ -27,7 +27,16 @@ precision highp int;
 #define G_WAVELENGTH 534.
 #define B_WAVELENGTH 465.
 
-uniform mat4 view;
+uniform Scene {
+    mat4 viewProjection;
+    mat4 view;
+};
+
+uniform mat4 world;
+uniform vec4 vEyePosition;
+uniform vec3 vAmbientColor;
+uniform vec4 vCameraInfos;
+
 uniform vec3 velocity;
 uniform int useGalilean;
 uniform int relativisticBeaming;
@@ -37,7 +46,7 @@ varying vec4 vPosition;
 varying vec3 vNormal;
 varying vec2 vUV;
 
-uniform sampler2D textureSampler;
+uniform sampler2D albedoSampler;
 uniform sampler2D rgbMapSampler;
 
 // Hardcoded directional light source.
@@ -104,7 +113,7 @@ void main(void) {
     vec3 n = computeNormal();
     // Let's just assume a diffuse surface.
     float intensity = clamp(dot(light, n), 0.1, 1.);
-    vec4 rawAlbedoColor = gammaCorrect(texture2D(textureSampler, vUV));
+    vec4 rawAlbedoColor = gammaCorrect(texture2D(albedoSampler, vUV));
 
     float abberationFactor = computeAbberation();
 

@@ -4,14 +4,17 @@ precision highp int;
 #define WORLD_ENUM 0
 #define CAMERA_ENUM 1
 
+uniform Scene {
+    mat4 viewProjection;
+    mat4 view;
+};
+
 // Attributes
 attribute vec3 position;
 attribute vec3 normal;
 attribute vec2 uv;
 
 // Uniforms
-uniform mat4 view;
-uniform mat4 projection;
 uniform vec3 velocity;
 // Set to 0 for world frame and for camera frame.
 uniform int simultaneityFrame;
@@ -96,7 +99,7 @@ void main() {
     vPosition = vec4(transform(vp.xyz, v), vp.w);
     // Assume no shearing. Otherwise the inverse-transpose should be used.
     vNormal = mat3(worldView) * normal;
-    gl_Position = projection * vPosition;
+    gl_Position = viewProjection * inverse(view) * vPosition;
     // Transform the texture coordinate verbatim.
     vUV = uv;
 }

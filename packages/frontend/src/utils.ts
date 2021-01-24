@@ -1,10 +1,22 @@
-import { ShaderMaterial, Vector3 } from "@babylonjs/core";
+import { Effect, ShaderMaterial, Vector3 } from "@babylonjs/core";
 import { RelativisticCamera } from "./camera";
 import { getState } from "./ui";
 
 export type UniformParams = {
   int?: Record<string, number>;
   vec3?: Record<string, Vector3>;
+};
+
+export const getCameraVelocity = (
+  camera: RelativisticCamera,
+  cameraBeta: number,
+  useFixedVelocity: boolean
+) => {
+  const velocity =
+    camera.velocity == null || useFixedVelocity
+      ? camera.getDirection(Vector3.Forward()).scale(cameraBeta)
+      : camera.velocity;
+  return velocity;
 };
 
 /**
@@ -20,10 +32,7 @@ export const getUniformParams = (camera: RelativisticCamera) => {
     relativisticBeaming,
     dopplerEffect,
   } = getState();
-  const velocity =
-    camera.velocity == null || useFixedVelocity
-      ? camera.getDirection(Vector3.Forward()).scale(cameraBeta)
-      : camera.velocity;
+  const velocity = getCameraVelocity(camera, cameraBeta, useFixedVelocity);
   return {
     vec3: {
       velocity,
@@ -39,7 +48,10 @@ export const getUniformParams = (camera: RelativisticCamera) => {
 };
 
 /** Convenience function for setting a bunch of uniforms on a shader. */
-export const setUniforms = (shader: ShaderMaterial, data: UniformParams) => {
+export const setUniforms = (
+  shader: ShaderMaterial | Effect,
+  data: UniformParams
+) => {
   if (data.int != null) {
     Object.entries(data.int).forEach(([uniformName, uniformValue]) => {
       shader.setInt(uniformName, uniformValue);

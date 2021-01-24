@@ -43,10 +43,6 @@ export const makeSkybox = async (scene: Scene) => {
     }
   );
   skybox.infiniteDistance = true;
-  // skyboxMaterial.depthFunction = Constants.ALWAYS;
-  // skyboxMaterial.forceDepthWrite = false;
-  // skyboxMaterial.disableDepthWrite = true;
-  // skyboxMaterial.disableDepthWrite = true;
   skybox.material = skyboxMaterial;
   const cubeTexture = new CubeTexture("skybox/skybox", scene, [
     "_px.png",
