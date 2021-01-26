@@ -99,11 +99,7 @@ See [Chapter 4 of Daniel Weiskopf's dissertation](https://publikationen.uni-tueb
   using the inverse-transpose of the Lorentz matrix, but couldn't figure out
   the issue.
 
-- No doppler effect or aberration of light. Would be great to have.
-
-- Shading model is very basic. It would be nice to support normal maps,
-  specular highlights and environment maps. Perhaps this can be done within
-  BabylonJS?
+- Shading model is very basic.
 
 - No support for users opening their own models without modifying the code.
   Two things here: first is adding a UI for opening a GLTF file and then
