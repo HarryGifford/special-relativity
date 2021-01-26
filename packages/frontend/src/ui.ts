@@ -1,6 +1,6 @@
 export const enum SimultaneityFrame {
   world = 0,
-  camera = 1
+  camera = 1,
 }
 
 /** UI configuration used in this demo. */
@@ -27,6 +27,10 @@ export type UiState = {
   dopplerEffect: boolean;
 };
 
+const diceUrl = "SubdividedCube.gltf";
+const sponzaUrl =
+  "https://specialrelativitymeshes.z5.web.core.windows.net/Sponza/sponza.gltf";
+
 /**
  * Save the state to session storage, which is preserved until the browser is
  * closed.
@@ -42,7 +46,7 @@ const defaultUiState: UiState = {
   galilean: false,
   simultaneityFrame: SimultaneityFrame.camera,
   relativisticBeaming: false,
-  dopplerEffect: false
+  dopplerEffect: false,
 };
 
 export const getState = (): UiState => {
@@ -61,8 +65,7 @@ const createSpeedSlider = () => {
   slider.step = "0.005";
   slider.inputMode = "decimal";
   slider.value = uiState.cameraBeta?.toString();
-  slider.title =
-    "Camera speed as a fraction of the speed of light."
+  slider.title = "Camera speed as a fraction of the speed of light.";
   return slider;
 };
 
@@ -101,36 +104,78 @@ const createDopplerEffectToggle = () => {
   return toggle;
 };
 
-const createSimultaneityPicker = () => {
-  const container = document.createElement("div");
+type PickerOption<T> = {
+  label: string;
+  value: T;
+};
 
+type Picker<T> = {
+  el: HTMLElement;
+  id: string;
+  options: PickerOption<T>[];
+};
+
+const createRadioPicker = <T>({ el, id, options }: Picker<T>) => {
+  const buttons = options.map(({ value }) => {
+    const button = document.createElement("input");
+    button.name = id;
+    button.type = "radio";
+    button.value = String(value);
+    return button;
+  });
+
+  const containerEl = el;
+  for (let idx = 0; idx < options.length; idx++) {
+    const labelEl = document.createElement("label");
+    labelEl.appendChild(buttons[idx]);
+    labelEl.append(options[idx].label);
+    containerEl.append(labelEl);
+  }
+
+  const setValue = (value: T) => {
+    for (let idx = 0; idx < options.length; idx++) {
+      const { value: buttonValue } = options[idx];
+      const button = buttons[idx];
+      button.checked = buttonValue === value;
+    }
+  };
+
+  const setDisabled = (disabled: boolean) => {
+    for (let idx = 0; idx < options.length; idx++) {
+      const button = buttons[idx];
+      button.disabled = disabled;
+    }
+  };
+
+  const onChange = (handler: (value: T) => void) => {
+    buttons.forEach((button, idx) => {
+      const value = options[idx].value;
+      button.onclick = (e: MouseEvent) => {
+        const target = e.target;
+        if (target == null || !(target instanceof HTMLInputElement)) {
+          return;
+        }
+        const value = options[idx].value;
+        handler(value);
+      };
+    });
+  };
+
+  return {
+    buttons,
+    onChange,
+    setValue,
+    setDisabled,
+  };
+};
+
+const createSimultaneityPicker = () => {
+  const containerEl = document.createElement("div");
   const noTimeDelayLabel = document.createElement("label");
   const noTimeDelayToggle = createNoTimeDelayToggle();
   noTimeDelayLabel.appendChild(noTimeDelayToggle);
-  noTimeDelayLabel.append("Assume no light travel time in frame:")
-  container.appendChild(noTimeDelayLabel);
-
-  const cameraButton = document.createElement("input");
-  cameraButton.name = "simultaneity-frame";
-  cameraButton.type = "radio";
-  cameraButton.disabled = !uiState.useNoTimeDelay;
-  cameraButton.checked = uiState.simultaneityFrame === SimultaneityFrame.camera;
-  cameraButton.value = `${SimultaneityFrame.camera}`;
-  const cameraButtonLabel = document.createElement("label");
-  cameraButtonLabel.appendChild(cameraButton);
-  cameraButtonLabel.append("Camera");
-
-  const worldButton = document.createElement("input");
-  worldButton.name = "simultaneity-frame";
-  worldButton.type = "radio";
-  worldButton.disabled = !uiState.useNoTimeDelay;
-  worldButton.checked = uiState.simultaneityFrame === SimultaneityFrame.world;
-  worldButton.value = `${SimultaneityFrame.world}`;
-  const worldButtonLabel = document.createElement("label");
-  worldButtonLabel.appendChild(worldButton);
-  worldButtonLabel.append("World");
-
-  noTimeDelayToggle.addEventListener("change", e => {
+  noTimeDelayLabel.append("Assume no light travel time in frame:");
+  noTimeDelayToggle.addEventListener("change", (e) => {
     const target = e.target;
     if (target == null || !(target instanceof HTMLInputElement)) {
       return;
@@ -138,35 +183,70 @@ const createSimultaneityPicker = () => {
     const useNoTimeDelay = !!target.checked;
     uiState.useNoTimeDelay = useNoTimeDelay;
     saveState();
-
-    worldButton.disabled = !useNoTimeDelay;
-    cameraButton.disabled = !useNoTimeDelay;
+    setDisabled(!useNoTimeDelay);
   });
-
-  const onClick = (e: MouseEvent) => {
-    const target = e.target;
-    if (target == null || !(target instanceof HTMLInputElement)) {
-      return;
-    }
-    const value = parseInt(target.value, 10) as SimultaneityFrame;
+  containerEl.appendChild(noTimeDelayLabel);
+  const { onChange, setValue, setDisabled } = createRadioPicker({
+    el: containerEl,
+    id: "simultaneity-frame",
+    options: [
+      {
+        label: "Camera",
+        value: SimultaneityFrame.camera,
+      },
+      {
+        label: "World",
+        value: SimultaneityFrame.world,
+      },
+    ],
+  });
+  setValue(uiState.simultaneityFrame);
+  setDisabled(!uiState.useNoTimeDelay);
+  onChange((value) => {
     uiState.simultaneityFrame = value;
     saveState();
-  }
-  worldButton.onclick = onClick;
-  cameraButton.onclick = onClick;
+  });
+  return containerEl;
+};
 
-  container.appendChild(worldButtonLabel);
-  container.appendChild(cameraButtonLabel);
+export const getSceneUrl = (): string => {
+  return sessionStorage.relativityScene || "SubdividedCube.gltf";
+};
 
-  return container;
-}
+const createScenePicker = () => {
+  const containerEl = document.createElement("div");
+  const label = document.createElement("label");
+  label.append("Scene:");
+  containerEl.appendChild(label);
+  const { onChange, setValue } = createRadioPicker<string>({
+    el: containerEl,
+    id: "scene-picker",
+    options: [
+      {
+        label: "Dice",
+        value: diceUrl,
+      },
+      {
+        label: "Sponza",
+        value: sponzaUrl,
+      },
+    ],
+  });
+  setValue(getSceneUrl());
+  onChange((value) => {
+    sessionStorage.relativityScene = value;
+    // Reload the browser for simplicity.
+    window.location.reload();
+  });
+  return containerEl;
+};
 
 export const initSpeedIndicator = (el: HTMLElement) => {
   const speedIndicator = document.createElement("div");
   speedIndicator.classList.add("speed-indicator");
   el.appendChild(speedIndicator);
   return speedIndicator;
-}
+};
 
 /** Element to add the UI to. */
 export const initUi = (el: HTMLElement) => {
@@ -204,7 +284,7 @@ export const initUi = (el: HTMLElement) => {
     }
     uiState.galilean = !!target.checked;
     saveState();
-  })
+  });
 
   const relativisticBeamingToggle = createRelativisticBeamingToggle();
   relativisticBeamingToggle.addEventListener("change", (e) => {
@@ -247,15 +327,16 @@ export const initUi = (el: HTMLElement) => {
   dopplerEffectLabel.append("Doppler effect");
 
   const simultaneityPicker = createSimultaneityPicker();
+  const scenePicker = createScenePicker();
 
   const uiEl = document.createElement("details");
   uiEl.className = "main-ui";
   const summaryEl = document.createElement("summary");
-  summaryEl.innerText = "Help / Settings"
+  summaryEl.innerText = "Help / Settings";
   uiEl.appendChild(summaryEl);
 
   const helptext = document.createElement("div");
-  helptext.innerText = "Use WASD and mouse to move or touch on smartphone."
+  helptext.innerText = "Use WASD and mouse to move or touch on smartphone.";
   uiEl.appendChild(helptext);
   uiEl.appendChild(sliderLabel);
   uiEl.appendChild(relativisticBeamingLabel);
@@ -263,5 +344,6 @@ export const initUi = (el: HTMLElement) => {
   uiEl.appendChild(simultaneityPicker);
   uiEl.appendChild(toggleLabel);
   uiEl.appendChild(galileanLabel);
+  uiEl.appendChild(scenePicker);
   el.appendChild(uiEl);
 };
