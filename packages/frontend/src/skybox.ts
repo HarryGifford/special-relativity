@@ -15,7 +15,7 @@ export const makeSkybox = async (scene: Scene) => {
   });
   const [vertexShaderSrc, fragShaderSrc] = await Promise.all([
     loadText("skybox.vert"),
-    loadText("skybox.frag"),
+    loadText("main.frag"),
   ]);
   const skyboxMaterial = new ShaderMaterial(
     "skybox",
@@ -30,23 +30,20 @@ export const makeSkybox = async (scene: Scene) => {
         "view",
         "projection",
         "velocity",
-        "textureSampler",
         "simultaneityFrame",
         "useGalilean",
         "useNoTimeDelay",
-        "rgbMapSampler",
         "dopplerEffect",
         "relativisticBeaming",
+      ],
+      samplers: [
         "skyboxSampler",
         "rgbMapSampler",
       ],
-    }
+      defines: ["#define SKYBOX"]
+    },
   );
   skybox.infiniteDistance = true;
-  // skyboxMaterial.depthFunction = Constants.ALWAYS;
-  // skyboxMaterial.forceDepthWrite = false;
-  // skyboxMaterial.disableDepthWrite = true;
-  // skyboxMaterial.disableDepthWrite = true;
   skybox.material = skyboxMaterial;
   const cubeTexture = new CubeTexture("skybox/skybox", scene, [
     "_px.png",

@@ -12,18 +12,19 @@ import {
 import "@babylonjs/loaders/glTF/2.0";
 import { createCanvas } from "./canvas-utils";
 import { loadText } from "./load-text";
-import { getState, initUi, initSpeedIndicator } from "./ui";
+import { getState, initUi, initSpeedIndicator, getSceneUrl } from "./ui";
 import { createCamera } from "./camera";
 import { makeSkybox } from "./skybox";
 import { getUniformParams, setUniforms } from "./utils";
 
-const main = async () => {
-  const el = document.body;
+type Config = {
+  el: HTMLElement;
+  sceneFilename: string;
+};
+
+const main = async ({ el, sceneFilename }: Config) => {
   initUi(el);
-  const canvasContainer = document.createElement("div");
-  canvasContainer.style.flex = "1 1 auto";
-  document.body.appendChild(canvasContainer);
-  const canvas = createCanvas(canvasContainer);
+  const canvas = createCanvas(el);
 
   const speedIndicator = initSpeedIndicator(el);
 
@@ -41,11 +42,7 @@ const main = async () => {
 
   Effect.ShadersStore["customFragmentShader"] = fragShaderSrc;
 
-  const scene = await SceneLoader.LoadAsync(
-    window.location.href,
-    "SubdividedCube.gltf",
-    engine
-  );
+  const scene = await SceneLoader.LoadAsync(sceneFilename);
 
   const defaultCameraInfo = scene.getNodeByID("Camera") as TransformNode;
   const defaultPosition = defaultCameraInfo?.position || new Vector3(0, 0, -1);
@@ -75,10 +72,14 @@ const main = async () => {
   scene.skipFrustumClipping = true;
 
   const shaders = scene.meshes
-    .filter((mesh) => !(mesh instanceof InstancedMesh))
+    .filter((mesh) => !(mesh instanceof InstancedMesh) && mesh.material != null)
     .map((mesh) => {
       const material = mesh.material as PBRMaterial;
-      const albedo = material?.albedoTexture;
+      if (material == null) {
+        throw new Error("Material should not be null");
+      }
+      const albedo = material.albedoTexture;
+      const bump = material.bumpTexture;
 
       const shaderMaterial = new ShaderMaterial(
         "shader" + mesh.name,
@@ -88,30 +89,33 @@ const main = async () => {
           fragmentSource: fragShaderSrc,
         },
         {
-          attributes: ["position", "normal", "uv"],
+          attributes: ["position", "normal", "tangent", "uv"],
           uniforms: [
             "world",
             "finalWorld",
-            "worldView",
-            "worldViewProjection",
             "view",
             "projection",
-            "viewProjection",
             "velocity",
-            "textureSampler",
             "simultaneityFrame",
             "useGalilean",
             "useNoTimeDelay",
-            "rgbMapSampler",
             "dopplerEffect",
             "relativisticBeaming",
           ],
-          defines: albedo != null ? ["#define HAS_TEXTURE"] : [],
+          samplers: [
+            "albedoSampler",
+            "bumpSampler",
+            "rgbMapSampler",
+          ],
+          defines: bump != null ? ["#define TANGENT"] : []
         }
       );
       shaderMaterial.setTexture("rgbMapSampler", rgbMapTexture);
       if (albedo != null) {
-        shaderMaterial.setTexture("textureSampler", albedo);
+        shaderMaterial.setTexture("albedoSampler", albedo);
+      }
+      if (bump != null) {
+        shaderMaterial.setTexture("bumpSampler", bump);
       }
       mesh.material = shaderMaterial;
       return shaderMaterial;
@@ -129,7 +133,7 @@ const main = async () => {
     const uniformParams = getUniformParams(camera);
     setUniforms(skyboxMaterial, uniformParams);
     shaders.forEach((shader) => {
-      setUniforms(shader, uniformParams);
+      setUniforms(shader!, uniformParams);
     });
 
     const velocity = uniformParams.vec3.velocity;
@@ -147,4 +151,7 @@ const main = async () => {
   canvas.focus();
 };
 
-main().catch(console.error);
+main({
+  el: document.body,
+  sceneFilename: getSceneUrl()
+}).catch(console.error);
