@@ -26,6 +26,7 @@ export declare type UiState = {
     dopplerEffect: boolean;
 };
 export declare const getState: () => UiState;
+export declare const getSceneUrl: () => string;
 export declare const initSpeedIndicator: (el: HTMLElement) => HTMLDivElement;
 /** Element to add the UI to. */
 export declare const initUi: (el: HTMLElement) => void;

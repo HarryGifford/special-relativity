@@ -2,20 +2,20 @@ precision highp float;
 precision highp int;
 
 // Attributes
-attribute vec3 position;
+attribute vec4 position;
 
 // Uniforms
-uniform mat4 view;
 uniform mat4 projection;
-
-uniform int useGalilean;
-uniform int useNoTimeDelay;
-uniform int simultaneityFrame;
 
 // Varying
 varying vec4 vPosition;
+// We use the same fragment shader as main, so we need to define
+// all out variables that are used in the fragment shader.
+varying vec3 vNormal;
+varying vec3 vTangent;
+varying vec2 vUV;
 
 void main() {
-    vPosition = vec4(position, 1.);
+    vPosition = position;
     gl_Position = projection * vPosition;
 }

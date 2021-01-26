@@ -5,8 +5,9 @@ precision highp int;
 #define CAMERA_ENUM 1
 
 // Attributes
-attribute vec3 position;
+attribute vec4 position;
 attribute vec3 normal;
+attribute vec4 tangent;
 attribute vec2 uv;
 
 // Uniforms
@@ -25,6 +26,7 @@ uniform int useNoTimeDelay;
 // Varying
 varying vec4 vPosition;
 varying vec3 vNormal;
+varying vec3 vTangent;
 varying vec2 vUV;
 
 /**
@@ -87,15 +89,18 @@ vec3 transform(vec3 x, vec3 v) {
 
 void main() {
 #include<instancesVertex>
-    vec4 p = vec4(position, 1.);
-    mat4 worldView = view * finalWorld;
+    vec4 wPosition = finalWorld * position;
+    vec3 wNormal = mat3(finalWorld) * normal;
+    vec3 wTangent = mat3(finalWorld) * tangent.xyz * tangent.w;
+
     // Transform the point into eye space.
-    vec4 vp = worldView * p;
+    vec4 vp = view * wPosition;
     vec3 v = mat3(view) * velocity;
     // Perform the boost.
     vPosition = vec4(transform(vp.xyz, v), vp.w);
     // Assume no shearing. Otherwise the inverse-transpose should be used.
-    vNormal = mat3(worldView) * normal;
+    vNormal = mat3(view) * wNormal;
+    vTangent = mat3(view) * wTangent;
     gl_Position = projection * vPosition;
     // Transform the texture coordinate verbatim.
     vUV = uv;
