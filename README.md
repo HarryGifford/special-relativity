@@ -6,10 +6,10 @@ special relativistic transformations. You can see a live demo
 page uses WebGL. If you cannot use WebGL, there is a video
 [here](https://youtu.be/109s5HbdWs0).
 
-[![Approaching a line of cubes at 95% of the speed of light.](./assets/close-to-speed-of-light.png)](https://harrygifford.github.io/special-relativity/)
+[![Approaching a line of cubes at 95% of the speed of light.](./assets/close-to-the-speed-of-light.gif)](https://harrygifford.github.io/special-relativity/)
 
-Approaching a line of cubes at 95% of the speed of light. You can see the
-geometric effects of [abberation](https://en.wikipedia.org/wiki/Relativistic_aberration) and [Terrell rotation](https://en.wikipedia.org/wiki/Terrell_rotation).
+Accelerating along a street at at relativistic speeds. You can see the
+geometric effects of [abberation](https://en.wikipedia.org/wiki/Relativistic_aberration) and [Terrell rotation](https://en.wikipedia.org/wiki/Terrell_rotation). Click the link to see more and
 
 ## Usage
 
@@ -40,7 +40,7 @@ When you open the page you will see a bunch of options. They are
 **Relativistic beaming**: Shows the ["headlight effect"](https://en.wikipedia.org/wiki/Relativistic_beaming) where various effects cause the luminosity of
 different objects to change with velocity.
 
-**Doppler effect**: Shows the [Relativistic Doppler effect](https://en.wikipedia.org/wiki/Relativistic_Doppler_effect).
+**Doppler effect**: Shows the [relativistic Doppler effect](https://en.wikipedia.org/wiki/Relativistic_Doppler_effect).
 
 **Assume no light travel time**: Shows the geometry of the objects assuming no time delay. This requires us to assume a reference frame because the "now" slice will be different in different reference frames. There are two obvious choices:
 
@@ -51,6 +51,8 @@ different objects to change with velocity.
 **Assume fixed camera speed**: Assumes the camera is moving forward a fixed velocity relative to the environment but without actually moving the camera.
 
 **Use Galilean relativity**: Assumes no special relativity. Note that the rasterizer won't render things correctly for speeds greater than the speed of light.
+
+**Scene**: Either "Dice" which is a set of dice all in a row or Sponza, which is a beautiful atrium commonly used for rendering.
 
 ## Development
 
@@ -88,18 +90,27 @@ I used the fantastic [Relativity visualized](https://www.spacetimetravel.org/tom
 
 See [Chapter 4 of Daniel Weiskopf's dissertation](https://publikationen.uni-tuebingen.de/xmlui/bitstream/handle/10900/48159/pdf/01dissertation.pdf) for a great and detailed treatment.
 
+Similar to [A Slower Speed of Light](http://gamelab.mit.edu/games/a-slower-speed-of-light/) although I didn't use their code because I wanted to understand relativity myself.
+
+Sponza model take from [glTF-Sample-Models](https://github.com/KhronosGroup/glTF-Sample-Models/tree/master/2.0/Sponza).
+
 ## Known issues
 
 - The camera's acceleration is ad hoc. I want a simple way to make the camera
   speed up to a maximum velocity in the direction of movement when a key is
   pressed and then slow down to a stop when the key is released.
 
-- The normals are not transformed correctly with a moving light source, so as a work-around I compute
-  the normals from scratch in the fragment shader. I tried to get it to work
-  using the inverse-transpose of the Lorentz matrix, but couldn't figure out
-  the issue.
-
 - Shading model is very basic.
+
+- The Doppler and headlight effects are messily implemented in the Fragment
+  shader. It could probably be done in a separate pass.
+
+- No support for other moving objects. I tried to implement a rotating
+  wheel but it's difficult to compute the intersection with between the light
+  ray's path and the wheel's position.
+
+- No support for animations in the scene to demonstrate time dilation and
+  simultaneity.
 
 - No support for users opening their own models without modifying the code.
   Two things here: first is adding a UI for opening a GLTF file and then
