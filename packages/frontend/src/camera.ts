@@ -26,15 +26,19 @@ class RelativisticUniversalCamera extends UniversalCamera {
   dt: number;
 
   maxProperSpeed2: number | undefined;
+  dragCoefficient: number | undefined;
 
   public setMaxSpeed(speed: number | undefined) {
     if (speed == null) {
       this.maxProperSpeed2 = undefined;
+      this.dragCoefficient = 0;
       return;
     }
+    this.speed = speed;
     const maxSpeed2 = speed * speed;
-    const gamma2 = 1 / (1 - maxSpeed2);
+    const gamma2 = maxSpeed2 < 1 ? 1 / (1 - maxSpeed2) : 10000;
     this.maxProperSpeed2 = gamma2 * maxSpeed2;
+    this.dragCoefficient = 1 / Math.pow(this.maxProperSpeed2, 1 / 4);
   }
 
   constructor(name: string, position: Vector3, scene: Scene) {
@@ -46,33 +50,34 @@ class RelativisticUniversalCamera extends UniversalCamera {
 
     this.onAfterCheckInputsObservable.add((_camera, _eventState) => {
       let dt = this.dt;
-      if (this.cameraDirection.length() <= Epsilon) {
-        // Keys are not pressed, so we decelerate. This is hacky, but
-        // I couldn't think of a better way to accelerate to a maximum speed
-        // but also have an inertia at the same time. If I could figure that
-        // out it would hopefully allow a much less ad hoc camera
-        // implementation.
-        this.properVelocity.scaleInPlace(Math.exp(-dt) * this.inertia);
-      } else {
-        // Otherwise, apply constant acceleration.
-        this.properAcceleration.copyFrom(this.cameraDirection);
-
-        // Euler integration step.
-        // It's ok to add the velocities normally here, since the
-        // timestep is small.
-        const newProperVelocity = this.properVelocity.add(
-          this.properAcceleration.scale(dt)
+      // Apply acceleration with a drag term.
+      this.properAcceleration.copyFrom(this.cameraDirection);
+      const dragCoefficient = this.dragCoefficient ?? 0;
+      // Scaling the drag factor by the sqrt of the velocity is arbitrary
+      // and I just did it because it's cleaner. If you change it then
+      // you also need to change the drag coefficient. If below were
+      // pow(x, 1/3) then above would be `pow(maxProperSpeed, 1/2*1/3).
+      const drag = this.properVelocity
+        .normalizeToNew()
+        .scale(
+          dragCoefficient *
+            this.speed *
+            this.inertia *
+            Math.sqrt(this.properVelocity.length())
         );
-        // If a max speed is set, then we should respect it.
-        if (
-          this.maxProperSpeed2 == null ||
-          newProperVelocity.lengthSquared() < this.maxProperSpeed2
-        ) {
-          this.properVelocity.copyFrom(newProperVelocity);
-        }
-      }
+      this.properAcceleration.subtractInPlace(drag);
+
+      // Euler integration step.
+      this.properVelocity.addInPlace(this.properAcceleration.scale(dt));
       // Compute the normal velocity from the proper velocity.
-      const properSpeed2 = this.properVelocity.lengthSquared();
+      let properSpeed2 = this.properVelocity.lengthSquared();
+      // If a max speed is set, then we should respect it.
+      if (this.maxProperSpeed2 != null && properSpeed2 > this.maxProperSpeed2) {
+        this.properVelocity
+          .normalize()
+          .scaleInPlace(Math.sqrt(this.maxProperSpeed2));
+        properSpeed2 = this.maxProperSpeed2;
+      }
       const invGamma = 1 / Math.sqrt(1 + properSpeed2);
       this.properVelocity.scaleToRef(invGamma, this.velocity);
       this.position.addInPlace(this.velocity.scale(dt));
@@ -88,6 +93,10 @@ class RelativisticUniversalCamera extends UniversalCamera {
     // This is taken from the Babylon JS code. Not sure why it's not just
     // `getDeltaTime`.
     this.dt = Math.sqrt(engine.getDeltaTime() / (engine.getFps() * 100.0));
+    // Don't allow the timestep to get too large, so clamp it.
+    if (this.dt > 0.1) {
+      this.dt = 0.1;
+    }
     // Reset the camera direction.
     this.cameraDirection.setAll(0);
     // Smoothly stop rotation when rotation is stopped.
@@ -131,7 +140,7 @@ const initCamera = (camera: RelativisticUniversalCamera) => {
     camera.inputs.addVirtualJoystick();
   }
 
-  camera.speed = 0.5;
+  camera.speed = 1.0;
   camera.inertia = 0.9;
   camera.minZ = 0.1;
   camera.maxZ = 10000;
