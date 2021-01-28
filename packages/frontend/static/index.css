@@ -63,7 +63,8 @@ details.main-ui summary {
   background-color: hsla(220, 100%, 0%, 0.5);
   color: hsla(220, 100%, 100%, 1.0);
   font-size: x-large;
-  font-family: sans-serif;
+  font-family: monospace;
+  font-weight: bold;
   padding: 2px 4px;
   border-radius: 2px;
 }

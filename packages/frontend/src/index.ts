@@ -102,12 +102,8 @@ const main = async ({ el, sceneFilename }: Config) => {
             "dopplerEffect",
             "relativisticBeaming",
           ],
-          samplers: [
-            "albedoSampler",
-            "bumpSampler",
-            "rgbMapSampler",
-          ],
-          defines: bump != null ? ["#define TANGENT"] : []
+          samplers: ["albedoSampler", "bumpSampler", "rgbMapSampler"],
+          defines: bump != null ? ["#define TANGENT"] : [],
         }
       );
       shaderMaterial.setTexture("rgbMapSampler", rgbMapTexture);
@@ -139,7 +135,11 @@ const main = async ({ el, sceneFilename }: Config) => {
     const velocity = uniformParams.vec3.velocity;
     // Set the speed indicator in the UI.
     const speed = velocity.length();
-    speedIndicator.innerText = `Speed: ${speed.toFixed(3)}c`;
+    const gamma = 1 / Math.sqrt(1 - speed * speed);
+    speedIndicator.innerHTML = [
+      `Speed: ${speed.toFixed(3)}c`,
+      `Gamma: ${gamma.toFixed(3)}`,
+    ].join("<br/>");
 
     scene.render();
   });
@@ -153,5 +153,5 @@ const main = async ({ el, sceneFilename }: Config) => {
 
 main({
   el: document.body,
-  sceneFilename: getSceneUrl()
+  sceneFilename: getSceneUrl(),
 }).catch(console.error);
