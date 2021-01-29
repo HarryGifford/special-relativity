@@ -6,7 +6,7 @@ special relativistic transformations. You can see a live demo
 page uses WebGL. If you cannot use WebGL, there is a video
 [here](https://youtu.be/109s5HbdWs0).
 
-[![Approaching a line of cubes at 95% of the speed of light.](./assets/close-to-the-speed-of-light.gif)](https://harrygifford.github.io/special-relativity/)
+[![Accelerating along a street at at relativistic speeds.](./assets/close-to-the-speed-of-light.gif)](https://harrygifford.github.io/special-relativity/)
 
 Accelerating along a street at at relativistic speeds. You can see the
 geometric effects of [abberation](https://en.wikipedia.org/wiki/Relativistic_aberration) and [Terrell rotation](https://en.wikipedia.org/wiki/Terrell_rotation). Click the link to see more and
