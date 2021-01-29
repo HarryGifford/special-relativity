@@ -10,6 +10,9 @@ precision highp int;
 */
 
 #define EPS 1e-5
+#define M_PI 3.14159265359
+// Wavelength of a time pulse.
+#define PULSE_LENGTH 10
 
 // Hack used as part of computing the light intensity.
 // Larger values will cause the beaming light to saturate
@@ -30,14 +33,17 @@ precision highp int;
 
 uniform mat4 view;
 uniform vec3 velocity;
+uniform float time;
 uniform int useGalilean;
 uniform int relativisticBeaming;
 uniform int dopplerEffect;
+uniform int timePulse;
 
 varying vec4 vPosition;
 varying vec3 vNormal;
 varying vec3 vTangent;
 varying vec2 vUV;
+varying float t;
 
 uniform sampler2D albedoSampler;
 uniform sampler2D bumpSampler;
@@ -119,6 +125,18 @@ float transformIntensity(float intensity, float abberationFactor) {
     return intensity * pow(abberationFactor, 3. - SPECTRAL_INDEX);
 }
 
+/**
+ * Compute pulse intensity at a given point in time.
+ *
+ * Used to visualize time delay effects.
+ */
+float pulseIntensity() {
+    if (timePulse == 0) {
+        return 1.;
+    }
+    return 1. - (sin(2.*M_PI*t / 10.) + 1.)/2. > 0.5 ? 1. : 0.;
+}
+
 void main(void) {
 #ifdef SKYBOX
     // Used for rendering the skybox environment around the whole scene.
@@ -132,6 +150,7 @@ void main(void) {
     // Let's just assume a diffuse surface.
     float intensity = clamp(dot(light, n), 0.1, 1.);
     vec4 rawAlbedoColor = gammaCorrect(texture2D(albedoSampler, vUV));
+    rawAlbedoColor.x *= pulseIntensity();
 #endif
 
     float abberationFactor = computeAbberation();

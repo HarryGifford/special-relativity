@@ -33,10 +33,7 @@ const main = async ({ el, sceneFilename }: Config) => {
     loadText("main.frag"),
   ]);
 
-  const engine = new Engine(canvas, true, {
-    deterministicLockstep: true,
-    lockstepMaxSteps: 4,
-  });
+  const engine = new Engine(canvas, true);
 
   Effect.ShadersStore["customVertexShader"] = vertexShaderSrc;
 
@@ -45,7 +42,8 @@ const main = async ({ el, sceneFilename }: Config) => {
   const scene = await SceneLoader.LoadAsync(sceneFilename);
 
   const defaultCameraInfo = scene.getNodeByID("Camera") as TransformNode;
-  const defaultPosition = defaultCameraInfo?.position || new Vector3(0, 0, -1);
+  const defaultPosition =
+    defaultCameraInfo?.position || new Vector3(0, 0.33, -9);
   const defaultRotation = defaultCameraInfo?.rotationQuaternion;
 
   const camera = createCamera("camera1", defaultPosition, scene);
@@ -101,6 +99,8 @@ const main = async ({ el, sceneFilename }: Config) => {
             "useNoTimeDelay",
             "dopplerEffect",
             "relativisticBeaming",
+            "time",
+            "timePulse"
           ],
           samplers: ["albedoSampler", "bumpSampler", "rgbMapSampler"],
           defines: bump != null ? ["#define TANGENT"] : [],

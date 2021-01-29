@@ -48,9 +48,13 @@ different objects to change with velocity.
   compressed in the direction perpendicular to the direction of motion.
 - World: Assume the world is at rest and the camera is moving. In this case the camera's sensor is length contracted, but the light entering the camera is not. This means objects will appear stretched because the light from an object will be spread over a larger portion of the sensor.
 
-**Assume fixed camera speed**: Assumes the camera is moving forward a fixed velocity relative to the environment but without actually moving the camera.
+**Show synchronization**: Causes the blue color channel to pulse at the same
+time in the world frame of reference. Useful for inspecting time delay
+and time dilation.
 
 **Use Galilean relativity**: Assumes no special relativity. Note that the rasterizer won't render things correctly for speeds greater than the speed of light.
+
+**Assume fixed camera speed**: Assumes the camera is moving forward a fixed velocity relative to the environment but without actually moving the camera.
 
 **Scene**: Either "Dice" which is a set of dice all in a row or Sponza, which is a beautiful atrium commonly used for rendering.
 

@@ -25,6 +25,8 @@ export type UiState = {
   relativisticBeaming: boolean;
   /** Set to true to doppler shift the wavelength of light. */
   dopplerEffect: boolean;
+  /** Set to true to show a time pulse. */
+  timePulse: boolean;
 };
 
 const diceUrl = "SubdividedCube.gltf";
@@ -47,6 +49,7 @@ const defaultUiState: UiState = {
   simultaneityFrame: SimultaneityFrame.camera,
   relativisticBeaming: false,
   dopplerEffect: false,
+  timePulse: false
 };
 
 export const getState = (): UiState => {
@@ -101,6 +104,13 @@ const createDopplerEffectToggle = () => {
   const toggle = document.createElement("input");
   toggle.type = "checkbox";
   toggle.checked = uiState.dopplerEffect;
+  return toggle;
+};
+
+const createTimePulseToggle = () => {
+  const toggle = document.createElement("input");
+  toggle.type = "checkbox";
+  toggle.checked = uiState.timePulse;
   return toggle;
 };
 
@@ -306,6 +316,16 @@ export const initUi = (el: HTMLElement) => {
     saveState();
   });
 
+  const timePulseToggle = createTimePulseToggle();
+  timePulseToggle.addEventListener("change", e => {
+    const target = e.target;
+    if (target == null || !(target instanceof HTMLInputElement)) {
+      return;
+    }
+    uiState.timePulse = !!target.checked;
+    saveState();
+  })
+
   const sliderLabel = document.createElement("label");
   sliderLabel.appendChild(slider);
   sliderLabel.append("Max camera speed (fraction of c)");
@@ -326,6 +346,10 @@ export const initUi = (el: HTMLElement) => {
   dopplerEffectLabel.appendChild(dopplerEffectToggle);
   dopplerEffectLabel.append("Doppler effect");
 
+  const timePulseLabel = document.createElement("label");
+  timePulseLabel.appendChild(timePulseToggle);
+  timePulseLabel.append("Show synchronization")
+
   const simultaneityPicker = createSimultaneityPicker();
   const scenePicker = createScenePicker();
 
@@ -342,8 +366,9 @@ export const initUi = (el: HTMLElement) => {
   uiEl.appendChild(relativisticBeamingLabel);
   uiEl.appendChild(dopplerEffectLabel);
   uiEl.appendChild(simultaneityPicker);
-  uiEl.appendChild(toggleLabel);
+  uiEl.appendChild(timePulseLabel);
   uiEl.appendChild(galileanLabel);
+  uiEl.appendChild(toggleLabel);
   uiEl.appendChild(scenePicker);
   el.appendChild(uiEl);
 };
