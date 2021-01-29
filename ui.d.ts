@@ -24,6 +24,8 @@ export declare type UiState = {
     relativisticBeaming: boolean;
     /** Set to true to doppler shift the wavelength of light. */
     dopplerEffect: boolean;
+    /** Set to true to show a time pulse. */
+    timePulse: boolean;
 };
 export declare const getState: () => UiState;
 export declare const getSceneUrl: () => string;

@@ -14,6 +14,7 @@ attribute vec2 uv;
 uniform mat4 view;
 uniform mat4 projection;
 uniform vec3 velocity;
+uniform float time;
 // Set to 0 for world frame and for camera frame.
 uniform int simultaneityFrame;
 // Set to true to transform according to Euclidean space.
@@ -28,6 +29,7 @@ varying vec4 vPosition;
 varying vec3 vNormal;
 varying vec3 vTangent;
 varying vec2 vUV;
+varying float t;
 
 /**
  * Apply Lorentz/Galilean contraction to the given vector.
@@ -58,31 +60,30 @@ vec3 boost(vec3 v, vec3 x, float t)
  *
  * This function has a bunch of cases due to the allowed input parameters.
  */
-float eventTime(vec3 x, vec3 v) {
+float eventTime(float t, vec3 x, vec3 v) {
     if (useNoTimeDelay == 1) {
         if (useGalilean == 1) {
-            return 0.;
+            return t;
         }
         if (simultaneityFrame == WORLD_ENUM) {
             // Simultaneous events in the world frame.
-            return 0.;
+            return t;
         } else {
             // Simultaneous events in the camera's frame.
-            // Solve t' = gamma * (t - <v,x>), where t' = 0,
-            // gives us t = <v,x>.
-            return dot(v, x);
+            // Solve t' = gamma * (t - <v,x>), for t.
+            return t * sqrt(1. - length(v) * length(v)) + dot(v, x);
         }
     } else {
         // Time taken for light to reach the camera is just the distance
         // to reach the point where the light was emitted. Here we assume
         // the camera is located at the origin.
-        return -length(x);
+        return t - length(x);
     }
 }
 
 /** Transform vertex into the reference frame of the moving camera. */
 vec3 transform(vec3 x, vec3 v) {
-    float t = eventTime(x, v);
+    float t = eventTime(0., x, v);
     vec3 e = boost(v, x, t);
     return e;
 }
@@ -104,4 +105,7 @@ void main() {
     gl_Position = projection * vPosition;
     // Transform the texture coordinate verbatim.
     vUV = uv;
+    // Transform the time coordinate.
+    float tw = useNoTimeDelay == 1 ? time : time - length(vp.xyz);
+    t = eventTime(tw, vp.xyz, v);
 }
