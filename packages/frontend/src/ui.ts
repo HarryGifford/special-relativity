@@ -49,7 +49,7 @@ const defaultUiState: UiState = {
   simultaneityFrame: SimultaneityFrame.camera,
   relativisticBeaming: false,
   dopplerEffect: false,
-  timePulse: false
+  timePulse: false,
 };
 
 export const getState = (): UiState => {
@@ -72,46 +72,37 @@ const createSpeedSlider = () => {
   return slider;
 };
 
-const createFixedSpeedToggle = () => {
-  const toggle = document.createElement("input");
-  toggle.type = "checkbox";
-  toggle.checked = uiState.useFixedVelocity;
-  return toggle;
+type FilterPropertiesByType<T, U> = {
+  [K in keyof T as T[K] extends U ? K : never]: T[K];
 };
 
-const createNoTimeDelayToggle = () => {
-  const toggle = document.createElement("input");
-  toggle.type = "checkbox";
-  toggle.checked = uiState.useNoTimeDelay;
-  return toggle;
+/** UiState keys that are booleans. */
+type BooleanUiKeys = keyof FilterPropertiesByType<UiState, boolean>;
+
+type ToggleProps = {
+  attributeName: BooleanUiKeys;
+  label: string;
 };
 
-const createGalileanToggle = () => {
+const createToggle = ({ attributeName, label }: ToggleProps) => {
   const toggle = document.createElement("input");
   toggle.type = "checkbox";
-  toggle.checked = uiState.galilean;
-  return toggle;
-};
-
-const createRelativisticBeamingToggle = () => {
-  const toggle = document.createElement("input");
-  toggle.type = "checkbox";
-  toggle.checked = uiState.relativisticBeaming;
-  return toggle;
-};
-
-const createDopplerEffectToggle = () => {
-  const toggle = document.createElement("input");
-  toggle.type = "checkbox";
-  toggle.checked = uiState.dopplerEffect;
-  return toggle;
-};
-
-const createTimePulseToggle = () => {
-  const toggle = document.createElement("input");
-  toggle.type = "checkbox";
-  toggle.checked = uiState.timePulse;
-  return toggle;
+  toggle.checked = uiState[attributeName];
+  toggle.addEventListener("change", (e) => {
+    const target = e.target;
+    if (target == null || !(target instanceof HTMLInputElement)) {
+      return;
+    }
+    uiState[attributeName] = !!target.checked;
+    saveState();
+  });
+  const toggleLabel = document.createElement("label");
+  toggleLabel.appendChild(toggle);
+  toggleLabel.append(label);
+  return {
+    toggleLabel,
+    toggle,
+  };
 };
 
 type PickerOption<T> = {
@@ -123,9 +114,10 @@ type Picker<T> = {
   el: HTMLElement;
   id: string;
   options: PickerOption<T>[];
+  onChange?: (value: T) => void;
 };
 
-const createRadioPicker = <T>({ el, id, options }: Picker<T>) => {
+const createRadioPicker = <T>({ el, id, options, onChange }: Picker<T>) => {
   const buttons = options.map(({ value }) => {
     const button = document.createElement("input");
     button.name = id;
@@ -157,23 +149,16 @@ const createRadioPicker = <T>({ el, id, options }: Picker<T>) => {
     }
   };
 
-  const onChange = (handler: (value: T) => void) => {
+  onChange != null &&
     buttons.forEach((button, idx) => {
       const value = options[idx].value;
-      button.onclick = (e: MouseEvent) => {
-        const target = e.target;
-        if (target == null || !(target instanceof HTMLInputElement)) {
-          return;
-        }
-        const value = options[idx].value;
-        handler(value);
+      button.onclick = () => {
+        onChange(value);
       };
     });
-  };
 
   return {
     buttons,
-    onChange,
     setValue,
     setDisabled,
   };
@@ -181,22 +166,20 @@ const createRadioPicker = <T>({ el, id, options }: Picker<T>) => {
 
 const createSimultaneityPicker = () => {
   const containerEl = document.createElement("div");
-  const noTimeDelayLabel = document.createElement("label");
-  const noTimeDelayToggle = createNoTimeDelayToggle();
-  noTimeDelayLabel.appendChild(noTimeDelayToggle);
-  noTimeDelayLabel.append("Assume no light travel time in frame:");
-  noTimeDelayToggle.addEventListener("change", (e) => {
+  const { toggle, toggleLabel } = createToggle({
+    attributeName: "useNoTimeDelay",
+    label: "Assume no light travel time in frame:",
+  });
+  toggle.addEventListener("change", (e) => {
     const target = e.target;
     if (target == null || !(target instanceof HTMLInputElement)) {
       return;
     }
     const useNoTimeDelay = !!target.checked;
-    uiState.useNoTimeDelay = useNoTimeDelay;
-    saveState();
     setDisabled(!useNoTimeDelay);
   });
-  containerEl.appendChild(noTimeDelayLabel);
-  const { onChange, setValue, setDisabled } = createRadioPicker({
+  containerEl.appendChild(toggleLabel);
+  const { setValue, setDisabled } = createRadioPicker({
     el: containerEl,
     id: "simultaneity-frame",
     options: [
@@ -209,13 +192,13 @@ const createSimultaneityPicker = () => {
         value: SimultaneityFrame.world,
       },
     ],
+    onChange: (value) => {
+      uiState.simultaneityFrame = value;
+      saveState();
+    },
   });
   setValue(uiState.simultaneityFrame);
   setDisabled(!uiState.useNoTimeDelay);
-  onChange((value) => {
-    uiState.simultaneityFrame = value;
-    saveState();
-  });
   return containerEl;
 };
 
@@ -228,7 +211,7 @@ const createScenePicker = () => {
   const label = document.createElement("label");
   label.append("Scene:");
   containerEl.appendChild(label);
-  const { onChange, setValue } = createRadioPicker<string>({
+  const { setValue } = createRadioPicker<string>({
     el: containerEl,
     id: "scene-picker",
     options: [
@@ -241,13 +224,13 @@ const createScenePicker = () => {
         value: sponzaUrl,
       },
     ],
+    onChange: (value) => {
+      sessionStorage.relativityScene = value;
+      // Reload the browser for simplicity.
+      window.location.reload();
+    },
   });
   setValue(getSceneUrl());
-  onChange((value) => {
-    sessionStorage.relativityScene = value;
-    // Reload the browser for simplicity.
-    window.location.reload();
-  });
   return containerEl;
 };
 
@@ -275,80 +258,34 @@ export const initUi = (el: HTMLElement) => {
     }
   });
 
-  const toggle = createFixedSpeedToggle();
-  toggle.addEventListener("change", (e) => {
-    const target = e.target;
-    if (target == null || !(target instanceof HTMLInputElement)) {
-      return;
-    }
-    const useFixedVelocity = target.checked;
-    uiState.useFixedVelocity = useFixedVelocity;
-    saveState();
+  const { toggleLabel: fixedSpeedToggleLabel } = createToggle({
+    attributeName: "useFixedVelocity",
+    label: "Assume fixed camera speed",
   });
 
-  const galileanToggle = createGalileanToggle();
-  galileanToggle.addEventListener("change", (e) => {
-    const target = e.target;
-    if (target == null || !(target instanceof HTMLInputElement)) {
-      return;
-    }
-    uiState.galilean = !!target.checked;
-    saveState();
+  const { toggleLabel: galileanToggleLabel } = createToggle({
+    attributeName: "galilean",
+    label: "Use Galilean relativity",
   });
 
-  const relativisticBeamingToggle = createRelativisticBeamingToggle();
-  relativisticBeamingToggle.addEventListener("change", (e) => {
-    const target = e.target;
-    if (target == null || !(target instanceof HTMLInputElement)) {
-      return;
-    }
-    uiState.relativisticBeaming = !!target.checked;
-    saveState();
+  const { toggleLabel: relativisticBeamingToggleLabel } = createToggle({
+    attributeName: "relativisticBeaming",
+    label: "Relativistic beaming",
   });
 
-  const dopplerEffectToggle = createDopplerEffectToggle();
-  dopplerEffectToggle.addEventListener("change", (e) => {
-    const target = e.target;
-    if (target == null || !(target instanceof HTMLInputElement)) {
-      return;
-    }
-    uiState.dopplerEffect = !!target.checked;
-    saveState();
+  const { toggleLabel: dopplerEffectToggleLabel } = createToggle({
+    attributeName: "dopplerEffect",
+    label: "Doppler effect",
   });
 
-  const timePulseToggle = createTimePulseToggle();
-  timePulseToggle.addEventListener("change", e => {
-    const target = e.target;
-    if (target == null || !(target instanceof HTMLInputElement)) {
-      return;
-    }
-    uiState.timePulse = !!target.checked;
-    saveState();
-  })
+  const { toggleLabel: timePulseToggleLabel } = createToggle({
+    attributeName: "timePulse",
+    label: "Show synchronization",
+  });
 
   const sliderLabel = document.createElement("label");
   sliderLabel.appendChild(slider);
   sliderLabel.append("Max camera speed (fraction of c)");
-
-  const toggleLabel = document.createElement("label");
-  toggleLabel.appendChild(toggle);
-  toggleLabel.append("Assume fixed camera speed");
-
-  const galileanLabel = document.createElement("label");
-  galileanLabel.appendChild(galileanToggle);
-  galileanLabel.append("Use Galilean relativity");
-
-  const relativisticBeamingLabel = document.createElement("label");
-  relativisticBeamingLabel.appendChild(relativisticBeamingToggle);
-  relativisticBeamingLabel.append("Relativistic beaming");
-
-  const dopplerEffectLabel = document.createElement("label");
-  dopplerEffectLabel.appendChild(dopplerEffectToggle);
-  dopplerEffectLabel.append("Doppler effect");
-
-  const timePulseLabel = document.createElement("label");
-  timePulseLabel.appendChild(timePulseToggle);
-  timePulseLabel.append("Show synchronization")
 
   const simultaneityPicker = createSimultaneityPicker();
   const scenePicker = createScenePicker();
@@ -363,12 +300,12 @@ export const initUi = (el: HTMLElement) => {
   helptext.innerText = "Use WASD and mouse to move or touch on smartphone.";
   uiEl.appendChild(helptext);
   uiEl.appendChild(sliderLabel);
-  uiEl.appendChild(relativisticBeamingLabel);
-  uiEl.appendChild(dopplerEffectLabel);
+  uiEl.appendChild(relativisticBeamingToggleLabel);
+  uiEl.appendChild(dopplerEffectToggleLabel);
   uiEl.appendChild(simultaneityPicker);
-  uiEl.appendChild(timePulseLabel);
-  uiEl.appendChild(galileanLabel);
-  uiEl.appendChild(toggleLabel);
+  uiEl.appendChild(timePulseToggleLabel);
+  uiEl.appendChild(galileanToggleLabel);
+  uiEl.appendChild(fixedSpeedToggleLabel);
   uiEl.appendChild(scenePicker);
   el.appendChild(uiEl);
 };
