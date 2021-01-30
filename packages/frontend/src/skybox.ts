@@ -1,50 +1,6 @@
-import {
-  ShaderMaterial,
-  Texture,
-  CubeTexture,
-  Scene,
-  MeshBuilder,
-  Mesh
-} from "@babylonjs/core";
-import { loadText } from "./load-text";
+import { Texture, CubeTexture, Scene } from "@babylonjs/core";
 
-export const makeSkybox = async (scene: Scene) => {
-  const skybox = MeshBuilder.CreateBox("skybox", {
-    size: 1000,
-    sideOrientation: Mesh.BACKSIDE,
-  });
-  const [vertexShaderSrc, fragShaderSrc] = await Promise.all([
-    loadText("skybox.vert"),
-    loadText("main.frag"),
-  ]);
-  const skyboxMaterial = new ShaderMaterial(
-    "skybox",
-    scene,
-    {
-      vertexSource: vertexShaderSrc,
-      fragmentSource: fragShaderSrc,
-    },
-    {
-      attributes: ["position", "normal", "uv"],
-      uniforms: [
-        "view",
-        "projection",
-        "velocity",
-        "simultaneityFrame",
-        "useGalilean",
-        "useNoTimeDelay",
-        "dopplerEffect",
-        "relativisticBeaming",
-      ],
-      samplers: [
-        "skyboxSampler",
-        "rgbMapSampler",
-      ],
-      defines: ["#define SKYBOX"]
-    },
-  );
-  skybox.infiniteDistance = true;
-  skybox.material = skyboxMaterial;
+export const initSkybox = async (scene: Scene) => {
   const cubeTexture = new CubeTexture("skybox/skybox", scene, [
     "_px.png",
     "_py.png",
@@ -54,10 +10,11 @@ export const makeSkybox = async (scene: Scene) => {
     "_nz.png",
   ]);
   cubeTexture.coordinatesMode = Texture.SKYBOX_MODE;
-  skyboxMaterial.setTexture("skyboxSampler", cubeTexture);
-  return {
-    skybox,
-    skyboxMaterial,
-    cubeTexture,
-  };
+  scene.createDefaultEnvironment({
+    environmentTexture: cubeTexture,
+    createGround: false,
+    skyboxSize: 1000,
+    groundSize: 1000,
+    skyboxTexture: cubeTexture,
+  });
 };

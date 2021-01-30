@@ -1,6 +1,6 @@
 import { ShaderMaterial, Vector3 } from "@babylonjs/core";
 import { RelativisticCamera } from "./camera";
-import { getState } from "./ui";
+import { getState, SimultaneityFrame, UiState } from "./ui";
 
 export type UniformParams = {
   int?: Record<string, number>;
@@ -10,9 +10,35 @@ export type UniformParams = {
 
 const ticks = () => {
   return new Date().getTime();
-}
+};
 
 const start = ticks();
+
+export const definesFromUiState = () => {
+  const {
+    galilean,
+    simultaneityFrame,
+    useFixedVelocity,
+    useNoTimeDelay,
+    relativisticBeaming,
+    dopplerEffect,
+    timePulse,
+  } = getState();
+  const defines = [
+    galilean ? "#define GALILEAN" : "",
+    useNoTimeDelay
+      ? simultaneityFrame == SimultaneityFrame.world
+        ? "#define SIMULTANEITY_FRAME_WORLD"
+        : "#define SIMULTANEITY_FRAME_CAMERA"
+      : "",
+    useFixedVelocity ? "#define FIXED_VELOCITY" : "",
+    useNoTimeDelay ? "#define NO_TIME_DELAY" : "",
+    relativisticBeaming ? "#define RELATIVISTIC_BEAMING" : "",
+    dopplerEffect ? "#define DOPPLER_EFFECT" : "",
+    timePulse ? "#define TIME_PULSE" : "",
+  ];
+  return defines;
+};
 
 /**
  * Get uniform parameters for shader from UI and camera.
@@ -26,18 +52,21 @@ export const getUniformParams = (camera: RelativisticCamera) => {
     useNoTimeDelay,
     relativisticBeaming,
     dopplerEffect,
-    timePulse
+    timePulse,
   } = getState();
   const velocity =
     camera.velocity == null || useFixedVelocity
       ? camera.getDirection(Vector3.Forward()).scale(cameraBeta)
       : camera.velocity;
+  const speed = velocity.length();
+  const gamma = galilean ? 1 : 1 / Math.sqrt(1 - speed * speed);
   return {
     vec3: {
       velocity,
     },
     float: {
-      time: (ticks() - start)/1000
+      time: (ticks() - start) / 1000,
+      gamma
     },
     int: {
       useNoTimeDelay: useNoTimeDelay ? 1 : 0,
@@ -45,7 +74,7 @@ export const getUniformParams = (camera: RelativisticCamera) => {
       useGalilean: galilean ? 1 : 0,
       relativisticBeaming: relativisticBeaming ? 1 : 0,
       dopplerEffect: dopplerEffect ? 1 : 0,
-      timePulse: timePulse ? 1 : 0
+      timePulse: timePulse ? 1 : 0,
     },
   };
 };

@@ -82,9 +82,10 @@ type BooleanUiKeys = keyof FilterPropertiesByType<UiState, boolean>;
 type ToggleProps = {
   attributeName: BooleanUiKeys;
   label: string;
+  save: () => void;
 };
 
-const createToggle = ({ attributeName, label }: ToggleProps) => {
+const createToggle = ({ attributeName, label, save }: ToggleProps) => {
   const toggle = document.createElement("input");
   toggle.type = "checkbox";
   toggle.checked = uiState[attributeName];
@@ -94,7 +95,7 @@ const createToggle = ({ attributeName, label }: ToggleProps) => {
       return;
     }
     uiState[attributeName] = !!target.checked;
-    saveState();
+    save();
   });
   const toggleLabel = document.createElement("label");
   toggleLabel.appendChild(toggle);
@@ -164,11 +165,12 @@ const createRadioPicker = <T>({ el, id, options, onChange }: Picker<T>) => {
   };
 };
 
-const createSimultaneityPicker = () => {
+const createSimultaneityPicker = (saveState: () => void) => {
   const containerEl = document.createElement("div");
   const { toggle, toggleLabel } = createToggle({
     attributeName: "useNoTimeDelay",
     label: "Assume no light travel time in frame:",
+    save: saveState,
   });
   toggle.addEventListener("change", (e) => {
     const target = e.target;
@@ -241,9 +243,18 @@ export const initSpeedIndicator = (el: HTMLElement) => {
   return speedIndicator;
 };
 
+export type UiConfig = {
+  el: HTMLElement;
+  onStateChange?: (config: UiState) => void;
+};
+
 /** Element to add the UI to. */
-export const initUi = (el: HTMLElement) => {
+export const initUi = ({ el, onStateChange }: UiConfig) => {
   uiState = getState();
+  const save = () => {
+    saveState();
+    onStateChange && onStateChange(uiState);
+  };
 
   const slider = createSpeedSlider();
   slider.addEventListener("change", (e) => {
@@ -254,40 +265,46 @@ export const initUi = (el: HTMLElement) => {
     const currValue = parseFloat(target.value);
     if (!Number.isNaN(currValue)) {
       uiState.cameraBeta = currValue;
-      saveState();
+      save();
+      onStateChange && onStateChange(getState());
     }
   });
 
   const { toggleLabel: fixedSpeedToggleLabel } = createToggle({
     attributeName: "useFixedVelocity",
     label: "Assume fixed camera speed",
+    save,
   });
 
   const { toggleLabel: galileanToggleLabel } = createToggle({
     attributeName: "galilean",
     label: "Use Galilean relativity",
+    save,
   });
 
   const { toggleLabel: relativisticBeamingToggleLabel } = createToggle({
     attributeName: "relativisticBeaming",
     label: "Relativistic beaming",
+    save,
   });
 
   const { toggleLabel: dopplerEffectToggleLabel } = createToggle({
     attributeName: "dopplerEffect",
     label: "Doppler effect",
+    save,
   });
 
   const { toggleLabel: timePulseToggleLabel } = createToggle({
     attributeName: "timePulse",
     label: "Show synchronization",
+    save,
   });
 
   const sliderLabel = document.createElement("label");
   sliderLabel.appendChild(slider);
   sliderLabel.append("Max camera speed (fraction of c)");
 
-  const simultaneityPicker = createSimultaneityPicker();
+  const simultaneityPicker = createSimultaneityPicker(save);
   const scenePicker = createScenePicker();
 
   const uiEl = document.createElement("details");

@@ -14,13 +14,8 @@ attribute vec2 uv;
 uniform mat4 view;
 uniform mat4 projection;
 uniform vec3 velocity;
+uniform float gamma;
 uniform float time;
-// Set to 0 for world frame and for camera frame.
-uniform int simultaneityFrame;
-// Set to true to transform according to Euclidean space.
-uniform int useGalilean;
-// Set to true to assume no travel time delay for light.
-uniform int useNoTimeDelay;
 // Used for rendering multiple instances of the same mesh.
 #include<instancesDeclaration>
 
@@ -44,14 +39,15 @@ varying float t;
 vec3 boost(vec3 v, vec3 x, float t)
 {
     float vSq = dot(v, v);
-    float invGamma = useGalilean == 1 ? 1. : sqrt(1. - vSq);
-    float vx = dot(v, x);
-
     if (vSq <= 1e-4) {
         return x;
     }
-    float gamma = 1. / invGamma;
-    return x + ((gamma - 1.)/vSq * vx - t*gamma) * v;
+#ifdef GALILEAN
+    return x - t * v;
+#else
+    float vx = dot(v, x);
+    return x + ((gamma - 1.) / vSq * vx - t * gamma) * v;
+#endif
 }
 
 /**
@@ -61,24 +57,28 @@ vec3 boost(vec3 v, vec3 x, float t)
  * This function has a bunch of cases due to the allowed input parameters.
  */
 float eventTime(float t, vec3 x, vec3 v) {
-    if (useNoTimeDelay == 1) {
-        if (useGalilean == 1) {
-            return t;
-        }
-        if (simultaneityFrame == WORLD_ENUM) {
-            // Simultaneous events in the world frame.
-            return t;
-        } else {
-            // Simultaneous events in the camera's frame.
-            // Solve t' = gamma * (t - <v,x>), for t.
-            return t * sqrt(1. - length(v) * length(v)) + dot(v, x);
-        }
-    } else {
-        // Time taken for light to reach the camera is just the distance
-        // to reach the point where the light was emitted. Here we assume
-        // the camera is located at the origin.
-        return t - length(x);
-    }
+#ifdef NO_TIME_DELAY
+#ifdef GALILEAN
+    return t;
+#else
+
+#ifdef SIMULTANEITY_FRAME_WORLD
+    // Simultaneous events in the world's frame.
+    return t;
+#endif
+#ifdef SIMULTANEITY_FRAME_CAMERA
+    // Simultaneous events in the camera's frame.
+    // Solve t' = gamma * (t - <v,x>), for t.
+    return t / gamma + dot(v, x);
+#endif
+
+#endif // GALILEAN
+#else
+    // Time taken for light to reach the camera is just the distance
+    // to reach the point where the light was emitted. Here we assume
+    // the camera is located at the origin.
+    return t - length(x);
+#endif // NO_TIME_DELAY
 }
 
 /** Transform vertex into the reference frame of the moving camera. */
@@ -89,7 +89,12 @@ vec3 transform(vec3 x, vec3 v) {
 }
 
 void main() {
-#include<instancesVertex>
+#ifdef SKYBOX
+    vPosition = position;
+    vec4 vp = vec4(mat3(view) * vec3(position), position.w);
+    gl_Position = projection * vp;
+#else
+    #include<instancesVertex>
     vec4 wPosition = finalWorld * position;
     vec3 wNormal = mat3(finalWorld) * normal;
     vec3 wTangent = mat3(finalWorld) * tangent.xyz * tangent.w;
@@ -106,6 +111,11 @@ void main() {
     // Transform the texture coordinate verbatim.
     vUV = uv;
     // Transform the time coordinate.
-    float tw = useNoTimeDelay == 1 ? time : time - length(vp.xyz);
+#ifdef NO_TIME_DELAY
+    float tw = time;
+#else
+    float tw = time - length(vp.xyz);
+#endif
     t = eventTime(tw, vp.xyz, v);
+#endif // SKYBOX
 }
