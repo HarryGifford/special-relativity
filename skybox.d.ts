@@ -1,7 +1,3 @@
-import { ShaderMaterial, CubeTexture, Scene, Mesh } from "@babylonjs/core";
-export declare const makeSkybox: (scene: Scene) => Promise<{
-    skybox: Mesh;
-    skyboxMaterial: ShaderMaterial;
-    cubeTexture: CubeTexture;
-}>;
+import { Scene } from "@babylonjs/core";
+export declare const initSkybox: (scene: Scene) => Promise<void>;
 //# sourceMappingURL=skybox.d.ts.map

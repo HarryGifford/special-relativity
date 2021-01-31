@@ -30,6 +30,10 @@ export declare type UiState = {
 export declare const getState: () => UiState;
 export declare const getSceneUrl: () => string;
 export declare const initSpeedIndicator: (el: HTMLElement) => HTMLDivElement;
+export declare type UiConfig = {
+    el: HTMLElement;
+    onStateChange?: (config: UiState) => void;
+};
 /** Element to add the UI to. */
-export declare const initUi: (el: HTMLElement) => void;
+export declare const initUi: ({ el, onStateChange }: UiConfig) => void;
 //# sourceMappingURL=ui.d.ts.map
