@@ -20,6 +20,7 @@ uniform float time;
 #include<instancesDeclaration>
 
 // Varying
+varying vec4 lPosition;
 varying vec4 vPosition;
 varying vec3 vNormal;
 varying vec3 vTangent;
@@ -91,6 +92,7 @@ vec3 transform(vec3 x, vec3 v) {
 void main() {
 #ifdef SKYBOX
     vPosition = position;
+    lPosition = position;
     vec4 vp = vec4(mat3(view) * vec3(position), position.w);
     gl_Position = projection * vp;
 #else
@@ -98,16 +100,17 @@ void main() {
     vec4 wPosition = finalWorld * position;
     vec3 wNormal = mat3(finalWorld) * normal;
     vec3 wTangent = mat3(finalWorld) * tangent.xyz * tangent.w;
+    vNormal = mat3(view) * wNormal;
+    vTangent = mat3(view) * wTangent;
 
     // Transform the point into eye space.
     vec4 vp = view * wPosition;
     vec3 v = mat3(view) * velocity;
+    vPosition = vp;
     // Perform the boost.
-    vPosition = vec4(transform(vp.xyz, v), vp.w);
+    lPosition = vec4(transform(vp.xyz, v), vp.w);
     // Assume no shearing. Otherwise the inverse-transpose should be used.
-    vNormal = mat3(view) * wNormal;
-    vTangent = mat3(view) * wTangent;
-    gl_Position = projection * vPosition;
+    gl_Position = projection * lPosition;
     // Transform the texture coordinate verbatim.
     vUV = uv;
     // Transform the time coordinate.
