@@ -36,24 +36,33 @@ uniform vec3 velocity;
 uniform float time;
 uniform float gamma;
 
+// PBR uniforms.
+uniform float metallicFactor;
+uniform float roughnessFactor;
+
+varying vec4 lPosition;
+// Un-Lorentz transformed variables.
 varying vec4 vPosition;
 varying vec3 vNormal;
 varying vec3 vTangent;
 varying vec2 vUV;
 varying float t;
 
+// PBR textures.
 uniform sampler2D albedoSampler;
 uniform sampler2D bumpSampler;
+uniform sampler2D metallicRoughnessSampler;
+// Used for transforming colors.
 uniform sampler2D rgbMapSampler;
 
 #ifdef SKYBOX
 uniform samplerCube reflectionSampler;
 #endif
 
+// Taken from https://wikipedia.org/wiki/Blinn%E2%80%93Phong_reflection_model
+#define SHININESS 16.
 // Hardcoded directional light source.
-const vec3 light_dir = vec3(-3.0, 5., -4.);
-
-vec3 white = vec3(0.0);
+const vec3 light_dir = vec3(3.0, -5., 4.);
 
 vec4 gammaCorrect(vec4 color) {
     return vec4(pow(color.rgb, vec3(2.2)), color.a);
@@ -80,22 +89,6 @@ vec3 computeNormal() {
     return normal;
 }
 
-float computeAbberationFromXV(vec3 x, vec3 v) {
-    float vSq = dot(v, v);
-    if (vSq < EPS) {
-        return 1.;
-    }
-    float vx = dot(v, x);
-    float vxn = vx / length(x);
-#ifdef GALILEAN
-    float abberation = 1. + vxn;
-#else
-    float ctr = (vxn - vSq) / (1. - vxn);
-    float abberation = 1. / (gamma * (1. - ctr));
-#endif
-    return abberation;
-}
-
 /**
  * Finds the direction vector for light coming from a point at infinity
  * traveling through the current pixel.
@@ -119,12 +112,6 @@ vec3 computeAbberationDirection(vec3 v, vec3 p) {
     return normalize(xx);
 }
 
-float computeAbberation() {
-    vec3 x = normalize(vPosition.xyz);
-    vec3 v = mat3(view) * velocity;
-    return computeAbberationFromXV(x, v);
-}
-
 float transformWavelength(float lambda, float abberationFactor) {
     return clamp(1. / abberationFactor * lambda, 0., 1.);
 }
@@ -144,9 +131,9 @@ vec3 transformColor(vec3 color, float abberationFactor) {
     return rrbgValue * color.r + grbgValue * color.g + brbgValue * color.b;
 }
 
-/** Performs relativistic beaming calculation. */
-float transformIntensity(float intensity, float abberationFactor) {
-    return intensity * pow(abberationFactor, 3. - SPECTRAL_INDEX);
+/** Get relativistic beaming factor. */
+float beamingIntensity(float abberationFactor) {
+    return pow(abberationFactor, 3. - SPECTRAL_INDEX);
 }
 
 /**
@@ -167,31 +154,53 @@ vec3 localVelocity() {
     return v;
 }
 
-void main(void) {
-    vec3 v = localVelocity();
-    vec3 xx = computeAbberationDirection(v, vPosition.xyz);
-    float abberationFactor = 1. / (gamma * (1. - dot(xx, v)));
-#ifdef SKYBOX
-    // Used for rendering the skybox environment around the whole scene.
-    float intensity = 1.;
-    vec4 rawAlbedoColor = gammaCorrect(textureCube(reflectionSampler, xx));
-#else
+vec3 computeLighting() {
     // Light direction.
-    vec3 light = normalize(mat3(view) * light_dir);
+    vec3 light = normalize(mat3(view) * -light_dir);
     // Surface normal.
     vec3 n = computeNormal();
     // Let's just assume a diffuse surface.
-    float intensity = clamp(dot(light, n), 0.1, 1.);
-    vec4 rawAlbedoColor = gammaCorrect(texture2D(albedoSampler, vUV));
+    float lambertian = clamp(dot(light, n), 0.1, 1.);
+#ifdef ALBEDO_ENABLED
+    vec4 albedoColor = gammaCorrect(texture2D(albedoSampler, vUV));
+    if (albedoColor.a < 0.01) {
+        discard;
+    }
+#else
+    vec4 albedoColor = vec4(1.);
+#endif // ALBEDO_ENABLED
+
+    vec3 diffuse = lambertian * albedoColor.rgb;
+#ifdef METALLIC_ROUGHNESS_ENABLED
+    vec3 V = normalize(-vPosition.xyz);
+    vec3 H = normalize(light + V);
+    vec4 metallicRoughness = texture2D(metallicRoughnessSampler, vUV);
+    float roughness = roughnessFactor * metallicRoughness.g;
+    float metallic = metallicFactor * metallicRoughness.b;
+
+    vec3 base = roughness * diffuse;
+    // Specular highlights using simple Blinn-Phong shading model.
+    float spec = clamp(dot(n, H), 0., 1.);
+    base += metallic * pow(spec, SHININESS) * vec3(1.);
+#else
+    vec3 base = diffuse;
+#endif // METALLIC_ROUGHNESS_ENABLED
+    return base;
+}
+
+void main(void) {
+    vec3 v = localVelocity();
+    vec3 xx = computeAbberationDirection(v, lPosition.xyz);
+    float abberationFactor = 1. / (gamma * (1. - dot(xx, v)));
+#ifdef SKYBOX
+    // Used for rendering the skybox environment around the whole scene.
+    vec3 base = gammaCorrect(textureCube(reflectionSampler, xx)).rgb;
+#else
+    vec3 base = computeLighting();
 #ifdef TIME_PULSE
-    rawAlbedoColor.x *= pulseIntensity();
+    base.x *= pulseIntensity();
 #endif // TIME_PULSE
 #endif // SKYBOX
-    vec4 albedoColor = abs(rawAlbedoColor.a) != 0.0
-        ? rawAlbedoColor
-        : vec4(white, 1.0);
-
-    vec3 base = albedoColor.rgb;
 
 #ifdef DOPPLER_EFFECT
     // Apply Doppler effect to color.
@@ -200,20 +209,15 @@ void main(void) {
 
 #ifdef RELATIVISTIC_BEAMING
     // Compute relativistic light intensity.
-    intensity = transformIntensity(intensity, abberationFactor);
+    float intensity = beamingIntensity(abberationFactor);
     base = intensity * base;
     // Hack to make it look better in RGB.
     if (intensity > 1.) {
         base += vec3(INTENSITY_SCALE * log(intensity));
     }
-#else
-    base = intensity * base;
 #endif // RELATIVISTIC_BEAMING
 
     base = clamp(base, 0., 1.);
-    if (rawAlbedoColor.a < 0.01) {
-        discard;
-    }
     vec4 color = vec4(base, 1.0);
     color = unGammaCorrect(color);
     gl_FragColor = color;

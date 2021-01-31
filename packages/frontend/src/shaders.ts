@@ -31,17 +31,34 @@ export const initShaders = ({ scene, rgbMapTexture }: ShaderConfig) => {
   const uniformsChange = (uniforms: UniformParams) => {
     for (let i = 0; i < materials.length; i++) {
       const mesh = validMeshes[i];
-      const material = mesh.material;
-      if (!(material instanceof ShaderMaterial)) {
+      const material = materials[i];
+      const shaderMaterial = mesh.material;
+      if (!(shaderMaterial instanceof ShaderMaterial)) {
         continue;
       }
-      setUniforms(material, uniforms);
+      setUniforms(shaderMaterial, uniforms);
+      if (material == null) {
+        continue;
+      }
     }
   };
   return {
     definesChange,
     uniformsChange,
   };
+};
+
+const updateShaderUniforms = (material: Material, shader: ShaderMaterial) => {
+  const uniformParams: UniformParams = {
+    float: {},
+    int: {},
+    vec3: {},
+  };
+  if (material instanceof PBRMaterial) {
+    uniformParams.float!["metallicFactor"] = material.metallic ?? 1;
+    uniformParams.float!["roughnessFactor"] = material.roughness ?? 1;
+  }
+  setUniforms(shader, uniformParams);
 };
 
 const updateShaderMaterial = (
@@ -55,10 +72,17 @@ const updateShaderMaterial = (
   const defines = [...userDefines];
   if (material instanceof PBRMaterial) {
     // Take the pre-defined samplers.
-    samplers["albedoSampler"] = material.albedoTexture;
+    if (material.albedoTexture != null) {
+      samplers["albedoSampler"] = material.albedoTexture;
+      defines.push("#define ALBEDO_ENABLED");
+    }
     if (material.bumpTexture != null) {
       samplers["bumpSampler"] = material.bumpTexture;
       defines.push("#define TANGENT");
+    }
+    if (material.metallicTexture != null) {
+      samplers["metallicRoughnessSampler"] = material.metallicTexture;
+      defines.push("#define METALLIC_ROUGHNESS_ENABLED");
     }
   } else if (material instanceof BackgroundMaterial) {
     if (material.reflectionTexture != null) {
@@ -83,6 +107,8 @@ const updateShaderMaterial = (
         "projection",
         "velocity",
         "time",
+        "metallicFactor",
+        "roughnessFactor",
       ],
       samplers: Object.keys(samplers),
       defines,
@@ -91,6 +117,7 @@ const updateShaderMaterial = (
   Object.entries(samplers).map(([name, texture]) => {
     shaderMaterial.setTexture(name, texture);
   });
+  updateShaderUniforms(material, shaderMaterial);
   // If there's already a shadermaterial, then we delete it.
   if (mesh.material instanceof ShaderMaterial) {
     mesh.material.dispose();
