@@ -11,6 +11,9 @@ precision highp int;
 
 #define EPS 1e-5
 #define M_PI 3.14159265359
+
+#define saturate(x) clamp(x, 0., 1.)
+
 // Wavelength of a time pulse.
 #define PULSE_LENGTH 20.
 
@@ -21,7 +24,7 @@ precision highp int;
 
 // See https://en.wikipedia.org/wiki/Relativistic_beaming
 // Spectral index normally between 0 and 2. Depends on material.
-#define SPECTRAL_INDEX 1.
+#define SPECTRAL_INDEX 0.
 
 // These are defined based on where the solid R, G, B colors are in the
 // RGB map sampler. i.e. the (626 - 380)th pixl will be solid red.
@@ -72,6 +75,29 @@ vec4 unGammaCorrect(vec4 color) {
     return vec4(pow(color.rgb, vec3(1.0/2.2)), color.a);
 }
 
+/** Colorspace conversion functions from http://chilliant.com/rgb2hsv.html. */
+vec3 hslToRgb(vec3 hsl) {
+    float h = hsl.x;
+    float r = abs(6.*h - 3.) - 1.;
+    float g = 2. - abs(6. * h - 2.);
+    float b = 2. - abs(6. * h - 4.);
+    float c = (1. - abs(2. * hsl.z - 1.)) * hsl.y;
+    return (saturate(vec3(r, g, b)) - 0.5) * c + hsl.z;
+}
+
+/** Colorspace conversion functions from http://chilliant.com/rgb2hsv.html. */
+vec3 rgbToHsl(vec3 RGB) {
+    vec3 c = RGB;
+    vec4 K = vec4(0., -1. / 3., 2. / 3., -1.);
+    vec4 p = mix(vec4(c.bg, K.wz), vec4(c.gb, K.xy), step(c.b, c.g));
+    vec4 q = mix(vec4(p.xyw, c.r), vec4(c.r, p.yzx), step(p.x, c.r));
+    float d = q.x - min(q.w, q.y);
+    float l = 0.5 * (q.x + min(q.w, q.y));
+    float s = d / (1. - abs(2. * l - 1.) + EPS);
+    float h = abs(q.z + (q.w - q.y) / (6. * d + EPS));
+    return vec3(h, s, l);
+}
+
 vec3 computeNormal() {
     vec3 normal = normalize(vNormal);
 #ifdef TANGENT
@@ -96,7 +122,7 @@ vec3 computeNormal() {
 vec3 computeAbberationDirection(vec3 v, vec3 p) {
     vec3 x = normalize(p);
     float vSq = dot(v, v);
-    if (vSq < EPS) {
+    if (vSq < EPS * EPS) {
         return x;
     }
     float vlen = sqrt(vSq);
@@ -113,7 +139,7 @@ vec3 computeAbberationDirection(vec3 v, vec3 p) {
 }
 
 float transformWavelength(float lambda, float abberationFactor) {
-    return clamp(1. / abberationFactor * lambda, 0., 1.);
+    return saturate(1. / abberationFactor * lambda);
 }
 
 vec3 lookupWavelengthColor(float lambda, float abberationFactor) {
@@ -180,7 +206,7 @@ vec3 computeLighting() {
 
     vec3 base = roughness * diffuse;
     // Specular highlights using simple Blinn-Phong shading model.
-    float spec = clamp(dot(n, H), 0., 1.);
+    float spec = saturate(dot(n, H));
     base += metallic * pow(spec, SHININESS) * vec3(1.);
 #else
     vec3 base = diffuse;
@@ -190,8 +216,10 @@ vec3 computeLighting() {
 
 void main(void) {
     vec3 v = localVelocity();
+#if defined(DOPPLER_EFFECT) || defined(RELATIVISTIC_BEAMING) || defined(SKYBOX)
     vec3 xx = computeAbberationDirection(v, lPosition.xyz);
     float abberationFactor = 1. / (gamma * (1. - dot(xx, v)));
+#endif // DOPPLER_EFFECT || RELATIVISTIC_BEAMING || SKYBOX
 #ifdef SKYBOX
     // Used for rendering the skybox environment around the whole scene.
     vec3 base = gammaCorrect(textureCube(reflectionSampler, xx)).rgb;
@@ -210,14 +238,11 @@ void main(void) {
 #ifdef RELATIVISTIC_BEAMING
     // Compute relativistic light intensity.
     float intensity = beamingIntensity(abberationFactor);
-    base = intensity * base;
-    // Hack to make it look better in RGB.
-    if (intensity > 1.) {
-        base += vec3(INTENSITY_SCALE * log(intensity));
-    }
+    vec3 baseHsl = rgbToHsl(saturate(base));
+    baseHsl.z *= intensity;
+    base = hslToRgb(baseHsl);
 #endif // RELATIVISTIC_BEAMING
-
-    base = clamp(base, 0., 1.);
+    base = saturate(base);
     vec4 color = vec4(base, 1.0);
     color = unGammaCorrect(color);
     gl_FragColor = color;
