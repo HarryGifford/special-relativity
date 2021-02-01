@@ -3,6 +3,7 @@ precision highp int;
 
 #define WORLD_ENUM 0
 #define CAMERA_ENUM 1
+#define EPS 1e-5
 
 // Attributes
 attribute vec4 position;
@@ -40,7 +41,7 @@ varying float t;
 vec3 boost(vec3 v, vec3 x, float t)
 {
     float vSq = dot(v, v);
-    if (vSq <= 1e-4) {
+    if (vSq <= EPS * EPS) {
         return x;
     }
 #ifdef GALILEAN
