@@ -23,10 +23,13 @@ uniform float time;
 // Varying
 varying vec4 lPosition;
 varying vec4 vPosition;
-varying vec3 vNormal;
-varying vec3 vTangent;
 varying vec2 vUV;
 varying float t;
+#ifdef TANGENT
+varying mat3 TBN;
+#else
+varying vec3 vNormal;
+#endif
 
 /**
  * Apply Lorentz/Galilean contraction to the given vector.
@@ -99,10 +102,15 @@ void main() {
 #else
     #include<instancesVertex>
     vec4 wPosition = finalWorld * position;
+    vec3 mNormal = normalize(normal);
+    vec3 mTangent = normalize(tangent.xyz);
+    vec3 mBitangent = cross(mNormal, mTangent) * tangent.w;
+#ifdef TANGENT
+    TBN = mat3(view) * mat3(finalWorld) * mat3(mTangent, mBitangent, mNormal);
+#else
     vec3 wNormal = mat3(finalWorld) * normal;
-    vec3 wTangent = mat3(finalWorld) * tangent.xyz * tangent.w;
     vNormal = mat3(view) * wNormal;
-    vTangent = mat3(view) * wTangent;
+#endif
 
     // Transform the point into eye space.
     vec4 vp = view * wPosition;

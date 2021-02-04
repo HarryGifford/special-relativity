@@ -29,7 +29,7 @@ export type UiState = {
   timePulse: boolean;
 };
 
-const diceUrl = "SubdividedCube.gltf";
+const diceUrl = "dice.gltf";
 const sponzaUrl =
   "https://specialrelativitymeshes.z5.web.core.windows.net/Sponza/sponza.gltf";
 
@@ -205,7 +205,7 @@ const createSimultaneityPicker = (saveState: () => void) => {
 };
 
 export const getSceneUrl = (): string => {
-  return sessionStorage.relativityScene || "SubdividedCube.gltf";
+  return sessionStorage.relativityScene || diceUrl;
 };
 
 const createScenePicker = () => {

@@ -7,6 +7,7 @@ import {
   BackgroundMaterial,
   ShaderMaterial,
   InstancedMesh,
+  VertexBuffer
 } from "@babylonjs/core";
 import { UniformParams, setUniforms } from "./utils";
 
@@ -78,7 +79,10 @@ const updateShaderMaterial = (
     }
     if (material.bumpTexture != null) {
       samplers["bumpSampler"] = material.bumpTexture;
-      defines.push("#define TANGENT");
+      defines.push("#define BUMP_ENABLED");
+      if (mesh.isVerticesDataPresent(VertexBuffer.TangentKind)) {
+        defines.push("#define TANGENT");
+      }
     }
     if (material.metallicTexture != null) {
       samplers["metallicRoughnessSampler"] = material.metallicTexture;
@@ -107,6 +111,7 @@ const updateShaderMaterial = (
         "projection",
         "velocity",
         "time",
+        "lightDir",
         "metallicFactor",
         "roughnessFactor",
       ],

@@ -2,9 +2,9 @@ import {
   Effect,
   Engine,
   SceneLoader,
-  TransformNode,
   Vector3,
   Texture,
+  DirectionalLight,
 } from "@babylonjs/core";
 import "@babylonjs/loaders/glTF/2.0";
 import { createCanvas } from "./canvas-utils";
@@ -38,16 +38,34 @@ const main = async ({ el, sceneFilename }: Config) => {
 
   const scene = await SceneLoader.LoadAsync(sceneFilename);
 
-  const defaultCameraInfo = scene.getNodeByID("Camera") as TransformNode;
-  const defaultPosition =
-    defaultCameraInfo?.position || new Vector3(0, 0.33, -9);
-  const defaultRotation = defaultCameraInfo?.rotationQuaternion;
+  const directionalLights = (scene.lights || []).filter(
+    (light) => light instanceof DirectionalLight
+  ) as DirectionalLight[];
+  if (directionalLights.length === 0) {
+    const position = new Vector3(3, -5, 4);
+    const light = new DirectionalLight("dir-light", position, scene);
+    light.intensity = 10;
+    directionalLights.push(light);
+  }
+  const light = directionalLights[0];
 
+  // Find default camera in scene and replace it with relativistic camera.
+  const defaultCameraInfo =
+    scene.cameras && scene.cameras.length > 0 ? scene.cameras[0] : undefined;
+  const defaultPosition =
+    defaultCameraInfo?.globalPosition || new Vector3(0, 0, 1);
+  const defaultRotation = defaultCameraInfo?.absoluteRotation;
+  if (defaultCameraInfo != null) {
+    scene.removeCamera(defaultCameraInfo);
+  }
   const camera = createCamera("camera1", defaultPosition, scene);
+  scene.activeCamera = camera;
 
   if (defaultRotation != null) {
     camera.rotationQuaternion = defaultRotation;
-    camera.update();
+    // This is needed due to virtual joystick not handling
+    // certain rotations correctly.
+    camera.setTarget(camera.getFrontPosition(1));
   } else {
     camera.setTarget(Vector3.Zero());
   }
@@ -86,7 +104,7 @@ const main = async ({ el, sceneFilename }: Config) => {
     const { cameraBeta } = getState();
     // Set the maximum allowed speed.
     camera.setMaxSpeed(cameraBeta);
-    const uniformParams = getUniformParams(camera);
+    const uniformParams = getUniformParams(camera, light);
     uniformsChange(uniformParams);
 
     const speed = uniformParams.vec3.velocity.length();
