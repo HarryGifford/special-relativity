@@ -1,4 +1,4 @@
-import { ShaderMaterial, Vector3 } from "@babylonjs/core";
+import { DirectionalLight, ShaderMaterial, Vector3 } from "@babylonjs/core";
 import { RelativisticCamera } from "./camera";
 import { SimultaneityFrame } from "./ui";
 export declare type UniformParams = {
@@ -10,9 +10,10 @@ export declare const definesFromUiState: () => string[];
 /**
  * Get uniform parameters for shader from UI and camera.
  */
-export declare const getUniformParams: (camera: RelativisticCamera) => {
+export declare const getUniformParams: (camera: RelativisticCamera, light: DirectionalLight) => {
     vec3: {
         velocity: Vector3;
+        lightDir: Vector3;
     };
     float: {
         time: number;

@@ -39,6 +39,8 @@ uniform vec3 velocity;
 uniform float time;
 uniform float gamma;
 
+uniform vec3 lightDir;
+
 // PBR uniforms.
 uniform float metallicFactor;
 uniform float roughnessFactor;
@@ -46,10 +48,13 @@ uniform float roughnessFactor;
 varying vec4 lPosition;
 // Un-Lorentz transformed variables.
 varying vec4 vPosition;
-varying vec3 vNormal;
-varying vec3 vTangent;
 varying vec2 vUV;
 varying float t;
+#ifdef TANGENT
+varying mat3 TBN;
+#else
+varying vec3 vNormal;
+#endif
 
 // PBR textures.
 uniform sampler2D albedoSampler;
@@ -64,8 +69,6 @@ uniform samplerCube reflectionSampler;
 
 // Taken from https://wikipedia.org/wiki/Blinn%E2%80%93Phong_reflection_model
 #define SHININESS 16.
-// Hardcoded directional light source.
-const vec3 light_dir = vec3(3.0, -5., 4.);
 
 vec4 gammaCorrect(vec4 color) {
     return vec4(pow(color.rgb, vec3(2.2)), color.a);
@@ -98,21 +101,40 @@ vec3 rgbToHsl(vec3 RGB) {
     return vec3(h, s, l);
 }
 
+// Taken from http://www.thetenthplanet.de/archives/1180
+mat3 cotangent_frame(vec3 N, vec3 p) {
+  // get edge vectors of the pixel triangle
+  vec3 dp1 = dFdx(p);
+  vec3 dp2 = dFdy(p);
+  vec2 duv1 = dFdx(vUV);
+  vec2 duv2 = dFdy(vUV); // solve the linear system
+  vec3 dp2perp = cross(dp2, N);
+  vec3 dp1perp = cross(N, dp1);
+  vec3 T = dp2perp * duv1.x + dp1perp * duv2.x;
+  // construct a scale-invariant frame
+  vec3 B = dp2perp * duv1.y + dp1perp * duv2.y;
+  float invmax = inversesqrt(max(dot(T, T), dot(B, B)));
+  return mat3(T * invmax, B * invmax, N);
+}
+
 vec3 computeNormal() {
-    vec3 normal = normalize(vNormal);
-#ifdef TANGENT
+#ifdef BUMP_ENABLED
     // Perform normal mapping.
     vec3 bNormal = 2.*texture2D(bumpSampler, vUV).xyz - 1.;
     if (!gl_FrontFacing) {
         bNormal.xy = -bNormal.xy;
     }
-    vec3 tangent = normalize(vTangent);
-    tangent = normalize(tangent - dot(tangent, normal) * normal);
-    vec3 bitangent = cross(normal, tangent);
-    mat3 TBN = mat3(tangent, bitangent, normal);
-    normal = TBN * bNormal;
-#endif
-    return normal;
+#ifdef TANGENT
+    mat3 tbn = TBN;
+#else
+    bNormal.y *= -1.;
+    mat3 tbn = cotangent_frame(normalize(vNormal), -vPosition.xyz);
+#endif // TANGENT
+    vec3 normal = tbn * normalize(bNormal);
+#else
+    vec3 normal = vNormal;
+#endif // BUMP_ENABLED
+    return normalize(normal);
 }
 
 /**
@@ -182,7 +204,7 @@ vec3 localVelocity() {
 
 vec3 computeLighting() {
     // Light direction.
-    vec3 light = normalize(mat3(view) * -light_dir);
+    vec3 light = normalize(mat3(view) * -lightDir);
     // Surface normal.
     vec3 n = computeNormal();
     // Let's just assume a diffuse surface.
