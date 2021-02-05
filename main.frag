@@ -144,10 +144,10 @@ vec3 computeNormal() {
 vec3 computeAbberationDirection(vec3 v, vec3 p) {
     vec3 x = normalize(p);
     float vSq = dot(v, v);
-    if (vSq < EPS * EPS) {
+    float vlen = sqrt(vSq);
+    if (vlen <= EPS) {
         return x;
     }
-    float vlen = sqrt(vSq);
     vec3 vnorm = v / vlen;
     vec3 xx = x + (gamma - 1.)*dot(x, vnorm)*vnorm;
 #ifdef NO_TIME_DELAY
