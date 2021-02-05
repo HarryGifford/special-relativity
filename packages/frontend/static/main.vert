@@ -44,7 +44,7 @@ varying vec3 vNormal;
 vec3 boost(vec3 v, vec3 x, float t)
 {
     float vSq = dot(v, v);
-    if (vSq <= EPS * EPS) {
+    if (vSq <= EPS) {
         return x;
     }
 #ifdef GALILEAN

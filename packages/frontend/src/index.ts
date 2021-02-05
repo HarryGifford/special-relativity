@@ -83,7 +83,7 @@ const main = async ({ el, sceneFilename }: Config) => {
   // Need to skip this due to movement of vertices from relativistic
   // corrections.
   scene.skipFrustumClipping = true;
-  initSkybox(scene);
+  await initSkybox(scene);
 
   const { definesChange, uniformsChange } = initShaders({
     scene,
@@ -96,8 +96,11 @@ const main = async ({ el, sceneFilename }: Config) => {
       definesChange(definesFromUiState());
     },
   });
-  // Set relevant defines for the first render.
-  definesChange(definesFromUiState());
+
+  engine.onBeginFrameObservable.addOnce(() => {
+    // Set relevant defines for the first render.
+    definesChange(definesFromUiState());
+  });
 
   // Register a render loop to repeatedly render the scene.
   engine.runRenderLoop(function () {
