@@ -153,7 +153,6 @@ void main() {
     vec4 tx1 = vec4(vPosition.xyz, tEvent);
     tx1 = boost(tx1, u);
     tx1 = boost(tx1, v);
-    float tt = tx1.w;
     lPosition = vec4(tx1.xyz, vPosition.w);
     gl_Position = projection * lPosition;
     // Transform the texture coordinate verbatim.
