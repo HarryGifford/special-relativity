@@ -144,6 +144,9 @@ vec3 computeNormal() {
 /**
  * Finds the direction vector for light coming from a point at infinity
  * traveling through the current pixel.
+ *
+ * Computed by evaluating the limit of a boost of p as the length of p
+ * goes to infinity.
  */
 vec3 computeAbberationDirection(vec3 v, vec3 p) {
     vec3 x = normalize(p);
@@ -160,8 +163,8 @@ vec3 computeAbberationDirection(vec3 v, vec3 p) {
 #endif
     vec3 xx = x + (gamma - 1.)*dot(x, vnorm)*vnorm;
 #ifdef NO_TIME_DELAY
-#ifdef SIMULTANEITY_FRAME_CAMERA
-    xx += vlen * v;
+#ifdef SIMULTANEITY_FRAME_WORLD
+    xx -= gamma * dot(x, v)*v;
 #endif
 #else
     xx -= gamma * v;

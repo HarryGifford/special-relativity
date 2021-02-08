@@ -148,7 +148,7 @@ void main() {
     vec3 v = mat3(view) * velocity;
     vec3 u = mat3(view) * objectVelocity;
     // Intersection event time.
-    float tEvent = eventTime(0., vPosition.xyz, velocityAdd(u, v));
+    float tEvent = eventTime(0., vPosition.xyz, velocityAdd(v, u));
     // Perform the boost.
     vec4 tx1 = vec4(vPosition.xyz, tEvent);
     tx1 = boost(tx1, u);
