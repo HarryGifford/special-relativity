@@ -278,7 +278,7 @@ export const initUi = ({ el, onStateChange }: UiConfig) => {
 
   const { toggleLabel: galileanToggleLabel } = createToggle({
     attributeName: "galilean",
-    label: "Use Galilean relativity",
+    label: "Use Galilean relativity (Experimental)",
     save,
   });
 
@@ -296,7 +296,7 @@ export const initUi = ({ el, onStateChange }: UiConfig) => {
 
   const { toggleLabel: timePulseToggleLabel } = createToggle({
     attributeName: "timePulse",
-    label: "Show synchronization",
+    label: "Show synchronization (Experimental)",
     save,
   });
 

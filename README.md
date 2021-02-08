@@ -98,6 +98,9 @@ Similar to [A Slower Speed of Light](http://gamelab.mit.edu/games/a-slower-speed
 
 Sponza model take from [glTF-Sample-Models](https://github.com/KhronosGroup/glTF-Sample-Models/tree/master/2.0/Sponza).
 
+Background from [NASA/Goddard Space Flight Center Scientific Visualization Studio](
+  https://svs.gsfc.nasa.gov/cgi-bin/details.cgi?aid=4851).
+
 ## Known issues
 
 - The camera's acceleration is ad hoc. I want a simple way to make the camera
@@ -109,17 +112,16 @@ Sponza model take from [glTF-Sample-Models](https://github.com/KhronosGroup/glTF
 - The Doppler and headlight effects are messily implemented in the Fragment
   shader. It could probably be done in a separate pass.
 
-- No support for other moving objects. I tried to implement a rotating
+- No support objects moving in anything other than a straight line. I tried to implement a rotating
   wheel but it's difficult to compute the intersection with between the light
   ray's path and the wheel's position.
-
-- No support for animations in the scene to demonstrate time dilation and
-  simultaneity.
 
 - No support for users opening their own models without modifying the code.
   Two things here: first is adding a UI for opening a GLTF file and then
   passing it to the babylon loader. The second is to subdivide large triangles
   automatically so that straight surfaces transform correctly.
+
+- The Galilean relativity isn't correct.
 
 ## Contributions
 

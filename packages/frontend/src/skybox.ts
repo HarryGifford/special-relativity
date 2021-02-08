@@ -1,14 +1,12 @@
-import { Texture, CubeTexture, Scene } from "@babylonjs/core";
+import { Texture, Scene, EquiRectangularCubeTexture } from "@babylonjs/core";
 
 export const initSkybox = async (scene: Scene) => {
-  const cubeTexture = new CubeTexture("skybox/skybox", scene, [
-    "_px.png",
-    "_py.png",
-    "_pz.png",
-    "_nx.png",
-    "_ny.png",
-    "_nz.png",
-  ]);
+  const cubeTexture = new EquiRectangularCubeTexture(
+    "space/starmap_2020.jpg",
+    scene,
+    1024
+  );
+
   cubeTexture.coordinatesMode = Texture.SKYBOX_MODE;
   scene.createDefaultEnvironment({
     environmentTexture: cubeTexture,

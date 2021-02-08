@@ -7,7 +7,8 @@ import {
   BackgroundMaterial,
   ShaderMaterial,
   InstancedMesh,
-  VertexBuffer
+  VertexBuffer,
+  Vector3,
 } from "@babylonjs/core";
 import { UniformParams, setUniforms } from "./utils";
 
@@ -34,6 +35,18 @@ export const initShaders = ({ scene, rgbMapTexture }: ShaderConfig) => {
       const mesh = validMeshes[i];
       const material = materials[i];
       const shaderMaterial = mesh.material;
+      // TODO: Add better support for animations.
+      // Should really be able to specify a velocity
+      // inside the GLTF file instead of using animation.
+      if (mesh.parent?.name === "Empty") {
+        const v1 = uniforms.vec3?.["velocity"];
+        if (v1 != null) {
+          const v2 = new Vector3(0, 0, -0.95);
+          uniforms.vec3!["objectVelocity"] = v2;
+        }
+      } else {
+        uniforms.vec3!["objectVelocity"] = Vector3.Zero();
+      }
       if (!(shaderMaterial instanceof ShaderMaterial)) {
         continue;
       }
@@ -114,6 +127,8 @@ const updateShaderMaterial = (
         "lightDir",
         "metallicFactor",
         "roughnessFactor",
+        "cameraPosition",
+        "objectVelocity"
       ],
       samplers: Object.keys(samplers),
       defines,

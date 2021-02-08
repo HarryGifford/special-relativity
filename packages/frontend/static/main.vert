@@ -15,8 +15,11 @@ attribute vec2 uv;
 uniform mat4 view;
 uniform mat4 projection;
 uniform vec3 velocity;
+uniform vec3 objectVelocity;
 uniform float gamma;
 uniform float time;
+uniform vec3 cameraPosition;
+
 // Used for rendering multiple instances of the same mesh.
 #include<instancesDeclaration>
 
@@ -37,21 +40,24 @@ varying vec3 vNormal;
  * Here I've just multiplied out the matrix to avoid explicit construction.
  * Taken from B matrix from:
  * https://en.wikipedia.org/wiki/Lorentz_transformation#Proper_transformations
+ * `q` is the position to transform. `q.w` is the time component.
  * `v` is the velocity.
- * `x` is the position to transform.
- * `t` is the time coordinate to transform.
  */
-vec3 boost(vec3 v, vec3 x, float t)
-{
+vec4 boost(vec4 q, vec3 v) {
+    vec3 x = q.xyz;
+    float t = q.w;
     float vSq = dot(v, v);
-    if (vSq <= EPS) {
-        return x;
+    if (vSq < EPS) {
+        return q;
     }
 #ifdef GALILEAN
-    return x - t * v;
+    return vec4(x - t*v, t);
 #else
+    float gamma = 1./sqrt(1. - vSq);
     float vx = dot(v, x);
-    return x + ((gamma - 1.) / vSq * vx - t * gamma) * v;
+    vec3 xp = x + ((gamma - 1.) / vSq * vx - t * gamma) * v;
+    float tp = gamma * (t - vx);
+    return vec4(xp, tp);
 #endif
 }
 
@@ -72,25 +78,48 @@ float eventTime(float t, vec3 x, vec3 v) {
     return t;
 #endif
 #ifdef SIMULTANEITY_FRAME_CAMERA
+#ifdef GALILEAN
+    float invGamma = 1.;
+#else
+    float vSq = dot(v, v);
+    float invGamma = sqrt(1. - vSq);
+#endif // GALILEAN
     // Simultaneous events in the camera's frame.
     // Solve t' = gamma * (t - <v,x>), for t.
-    return t / gamma + dot(v, x);
+    return t * invGamma + dot(v, x);
 #endif
 
-#endif // GALILEAN
+#endif
+#else
+#ifdef GALILEAN
+    float b = dot(v, x);
+    float t1 = -b - sqrt(b*b + dot(x, x));
+    return t + t1;
 #else
     // Time taken for light to reach the camera is just the distance
     // to reach the point where the light was emitted. Here we assume
     // the camera is located at the origin.
     return t - length(x);
+#endif // GALILEAN
 #endif // NO_TIME_DELAY
 }
 
-/** Transform vertex into the reference frame of the moving camera. */
-vec3 transform(vec3 x, vec3 v) {
-    float t = eventTime(0., x, v);
-    vec3 e = boost(v, x, t);
-    return e;
+/**
+ * Add two relativistic velocities.
+ *
+ * From https://en.wikipedia.org/wiki/Velocity-addition_formula
+ */
+vec3 velocityAdd(vec3 u, vec3 v) {
+#ifdef GALILEAN
+    return u + v;
+#endif
+    float uv = dot(u, v);
+    if (uv > 0.999) {
+        return u;
+    }
+    float vSq = dot(v, v);
+    float invGamma = sqrt(1. - vSq);
+    return 1./(1. + uv) * (invGamma * u + v + 1./(invGamma + 1.)*uv*v);
 }
 
 void main() {
@@ -108,26 +137,26 @@ void main() {
 #ifdef TANGENT
     TBN = mat3(view) * mat3(finalWorld) * mat3(mTangent, mBitangent, mNormal);
 #else
+    // Assume no shearing. Otherwise the inverse-transpose should be used.
     vec3 wNormal = mat3(finalWorld) * normal;
     vNormal = mat3(view) * wNormal;
 #endif
-
+    vec3 camPos = cameraPosition.xyz;
     // Transform the point into eye space.
-    vec4 vp = view * wPosition;
+    vPosition = view * wPosition;
+    // Transform velocities into eye space.
     vec3 v = mat3(view) * velocity;
-    vPosition = vp;
+    vec3 u = mat3(view) * objectVelocity;
+    // Intersection event time.
+    float tEvent = eventTime(0., vPosition.xyz, velocityAdd(v, u));
     // Perform the boost.
-    lPosition = vec4(transform(vp.xyz, v), vp.w);
-    // Assume no shearing. Otherwise the inverse-transpose should be used.
+    vec4 tx1 = vec4(vPosition.xyz, tEvent);
+    tx1 = boost(tx1, u);
+    tx1 = boost(tx1, v);
+    lPosition = vec4(tx1.xyz, vPosition.w);
     gl_Position = projection * lPosition;
     // Transform the texture coordinate verbatim.
     vUV = uv;
-    // Transform the time coordinate.
-#ifdef NO_TIME_DELAY
-    float tw = time;
-#else
-    float tw = time - length(vp.xyz);
-#endif
-    t = eventTime(tw, vp.xyz, v);
+    t = tx1.w;
 #endif // SKYBOX
 }
