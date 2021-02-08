@@ -24,7 +24,7 @@ precision highp int;
 
 // See https://en.wikipedia.org/wiki/Relativistic_beaming
 // Spectral index normally between 0 and 2. Depends on material.
-#define SPECTRAL_INDEX 0.
+#define SPECTRAL_INDEX 1.
 
 // These are defined based on where the solid R, G, B colors are in the
 // RGB map sampler. i.e. the (626 - 380)th pixl will be solid red.
@@ -35,7 +35,10 @@ precision highp int;
 #define B_WAVELENGTH 465.
 
 uniform mat4 view;
+// Camera velocity.
 uniform vec3 velocity;
+// Velocity of the object.
+uniform vec3 objectVelocity;
 uniform float time;
 uniform float gamma;
 
@@ -55,6 +58,7 @@ varying mat3 TBN;
 #else
 varying vec3 vNormal;
 #endif
+varying float vInstance;
 
 // PBR textures.
 uniform sampler2D albedoSampler;
@@ -149,6 +153,11 @@ vec3 computeAbberationDirection(vec3 v, vec3 p) {
         return x;
     }
     vec3 vnorm = v / vlen;
+#ifdef GALILEAN
+    float gamma = 1.;
+#else
+    float gamma = 1./sqrt(1. - vSq);
+#endif
     vec3 xx = x + (gamma - 1.)*dot(x, vnorm)*vnorm;
 #ifdef NO_TIME_DELAY
 #ifdef SIMULTANEITY_FRAME_CAMERA
@@ -184,6 +193,17 @@ float beamingIntensity(float abberationFactor) {
     return pow(abberationFactor, 3. - SPECTRAL_INDEX);
 }
 
+/** Compute abberation factor between a normalized direction and velocity. */
+float computeAbberationFactor(vec3 dir, vec3 v) {
+    #ifdef GALILEAN
+    float gamma = 1.;
+#else
+    float gamma = 1./(1. - dot(v, v));
+#endif
+    float abberationFactor = 1. / (gamma * (1. - dot(dir, v)));
+    return abberationFactor;
+}
+
 /**
  * Compute pulse intensity at a given point in time.
  *
@@ -193,18 +213,54 @@ float pulseIntensity() {
     return 1. - (sin(2.*M_PI*t / PULSE_LENGTH) + 1.)/2. > 0.5 ? 1. : 0.;
 }
 
-vec3 localVelocity() {
+vec3 velocityAdd(vec3 u, vec3 v) {
+#ifdef GALILEAN
+    return u + v;
+#endif
+    float uv = dot(u, v);
+    if (uv > 0.999) {
+        return u;
+    }
+    float vSq = dot(v, v);
+    float invGamma = sqrt(1. - vSq);
+    return 1./(1. + uv) * (invGamma * u + v + 1./(invGamma + 1.)*uv*v);
+}
+
+vec4 boost(vec4 q, vec3 v) {
+    vec3 x = q.xyz;
+    float t = q.w;
+    float vSq = dot(v, v);
+    if (vSq < EPS) {
+        return q;
+    }
+#ifdef GALILEAN
+    return vec4(x - t*v, t);
+#else
+    float gamma = 1./sqrt(1. - vSq);
+    float vx = dot(v, x);
+    vec3 xp = x + ((gamma - 1.) / vSq * vx - t * gamma) * v;
+    float tp = gamma * (t - vx);
+    return vec4(xp, tp);
+#endif
+}
+
+/** Get the relative velocity of the object in camera space. */
+vec3 computeRelativeVelocity() {
 #ifdef SKYBOX
     vec3 v = velocity;
 #else
     vec3 v = mat3(view) * velocity;
+    vec3 u = mat3(view) * objectVelocity;
+    v = velocityAdd(u, v);
 #endif // SKYBOX
     return v;
 }
 
 vec3 computeLighting() {
+    vec3 u = mat3(view) * objectVelocity;
     // Light direction.
-    vec3 light = normalize(mat3(view) * -lightDir);
+    vec3 light = -mat3(view) * normalize(lightDir);
+    light = computeAbberationDirection(u, light);
     // Surface normal.
     vec3 n = computeNormal();
     // Let's just assume a diffuse surface.
@@ -237,14 +293,15 @@ vec3 computeLighting() {
 }
 
 void main(void) {
-    vec3 v = localVelocity();
+    vec3 v = computeRelativeVelocity();
 #if defined(DOPPLER_EFFECT) || defined(RELATIVISTIC_BEAMING) || defined(SKYBOX)
-    vec3 xx = computeAbberationDirection(v, lPosition.xyz);
-    float abberationFactor = 1. / (gamma * (1. - dot(xx, v)));
+    vec3 xDir = normalize(lPosition.xyz);
+    float abberationFactor = computeAbberationFactor(xDir, v);
 #endif // DOPPLER_EFFECT || RELATIVISTIC_BEAMING || SKYBOX
 #ifdef SKYBOX
+    xDir = computeAbberationDirection(v, xDir);
     // Used for rendering the skybox environment around the whole scene.
-    vec3 base = gammaCorrect(textureCube(reflectionSampler, xx)).rgb;
+    vec3 base = gammaCorrect(textureCube(reflectionSampler,  xDir)).rgb;
 #else
     vec3 base = computeLighting();
 #ifdef TIME_PULSE
