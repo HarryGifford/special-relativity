@@ -100,14 +100,6 @@ const main = async ({ el, sceneFilename }: Config) => {
   engine.onBeginFrameObservable.addOnce(() => {
     // Set relevant defines for the first render.
     definesChange(definesFromUiState());
-    // Adjust animation speed to make it consistent
-    // with the camera speed, but first need to find
-    // out why the camera speed isn't consistent with
-    // this speed.
-    const ags = scene.animationGroups;
-    if (ags.length > 0) {
-      ags[0].speedRatio = 3.1;
-    }
   });
 
   // Register a render loop to repeatedly render the scene.

@@ -80,7 +80,18 @@ class RelativisticUniversalCamera extends UniversalCamera {
       }
       const invGamma = 1 / Math.sqrt(1 + properSpeed2);
       this.properVelocity.scaleToRef(invGamma, this.velocity);
-      this.position.addInPlace(this.velocity.scale(dt));
+      this.position.addInPlace(this.properVelocity.scale(dt));
+
+      // Adjust animation speed to make it consistent
+      // with the camera speed, but first need to find
+      // out why the camera speed isn't consistent with
+      // this speed.
+      // Get rid of this if we implement moving objects
+      // manually without the GLTF animation.
+      const ags = scene.animationGroups;
+      if (ags.length > 0) {
+        ags[0].speedRatio = 3.1 / invGamma;
+      }
     });
   }
 
