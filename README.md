@@ -1,5 +1,7 @@
 # special-relativity
 
+[**Live WebGL demo**](https://harrygifford.github.io/special-relativity/)
+
 This project shows how the geometry of the world looks under
 special relativistic transformations. You can see a live demo
 [here](https://harrygifford.github.io/special-relativity/). You can see effects such as Terrell rotation, Doppler shifting and the headlight effect. Note that the
