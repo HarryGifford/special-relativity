@@ -9,7 +9,6 @@ export const initSkybox = async (scene: Scene) => {
 
   cubeTexture.coordinatesMode = Texture.SKYBOX_MODE;
   scene.createDefaultEnvironment({
-    environmentTexture: cubeTexture,
     createGround: false,
     skyboxSize: 1000,
     groundSize: 1000,
