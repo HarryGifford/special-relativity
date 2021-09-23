@@ -1,0 +1,16 @@
+{
+  "name": "@sr/gltf-types",
+  "version": "0.1.0",
+  "description": "",
+  "types": "src/index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/HarryGifford/special-relativity",
+    "directory": "./packages/gltf-types"
+  },
+  "keywords": [
+    "gltf"
+  ],
+  "author": "Harry Gifford <harrygifford92@gmail.com>",
+  "license": "MIT"
+}

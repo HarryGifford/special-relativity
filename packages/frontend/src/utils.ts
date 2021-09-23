@@ -1,5 +1,5 @@
 import { DirectionalLight, ShaderMaterial, Vector3 } from "@babylonjs/core";
-import { RelativisticCamera } from "./camera";
+import { RelativisticCamera } from "./relativistic-camera";
 import { getState, SimultaneityFrame } from "./ui";
 
 export type UniformParams = {

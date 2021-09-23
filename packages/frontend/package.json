@@ -25,12 +25,14 @@
   "license": "MIT",
   "dependencies": {
     "@babylonjs/core": "^4.2.0",
-    "@babylonjs/loaders": "^4.2.0"
+    "@babylonjs/loaders": "^4.2.0",
+    "@sr/gltf-types": "workspace:*",
+    "gl-matrix": "^3.3.0"
   },
   "devDependencies": {
     "copy-webpack-plugin": "^8.1.1",
-    "ts-loader": "^9.1.2",
-    "webpack": "^5.37.0",
+    "ts-loader": "^9.2.1",
+    "webpack": "^5.37.1",
     "webpack-cli": "^4.7.0",
     "webpack-dev-server": "^3.11.2"
   }

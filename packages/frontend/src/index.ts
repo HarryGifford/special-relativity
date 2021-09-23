@@ -10,10 +10,14 @@ import "@babylonjs/loaders/glTF/2.0";
 import { createCanvas } from "./canvas-utils";
 import { loadText } from "./load-text";
 import { getState, initUi, initSpeedIndicator, getSceneUrl } from "./ui";
-import { createCamera } from "./camera";
+import { createCamera } from "./relativistic-camera";
 import { initSkybox } from "./skybox";
 import { definesFromUiState, getUniformParams } from "./utils";
 import { initShaders } from "./shaders";
+
+import {} from "./camera";
+
+import { sceneFromGltf, loadGltf } from "./scene";
 
 type Config = {
   el: HTMLElement;
@@ -37,6 +41,7 @@ const main = async ({ el, sceneFilename }: Config) => {
   Effect.ShadersStore["customFragmentShader"] = fragmentSource;
 
   const scene = await SceneLoader.LoadAsync(sceneFilename);
+  sceneFromGltf(await loadGltf(sceneFilename));
 
   const directionalLights = (scene.lights || []).filter(
     (light) => light instanceof DirectionalLight
@@ -60,6 +65,8 @@ const main = async ({ el, sceneFilename }: Config) => {
   }
   const camera = createCamera("camera1", defaultPosition, scene);
   scene.activeCamera = camera;
+
+  (window as any).camera = camera;
 
   if (defaultRotation != null) {
     camera.rotationQuaternion = defaultRotation;
