@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "description": "WebGL demo to View effects of special relativity such as Terrell rotation, relativistic beaming and Doppler shift.",
   "scripts": {
-    "build": "cd packages/frontend && pnpm run build:prod && cd ../..",
+    "build": "pushd packages/gltf && pnpm run build && popd && pushd packages/frontend && pnpm run build:prod && popd",
     "preinstall": "npx only-allow pnpm",
     "test": "echo \"Error: no test specified\" && exit 1"
   },

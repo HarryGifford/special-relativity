@@ -24,8 +24,10 @@
   "author": "Harry Gifford <harrygifford92@gmail.com>",
   "license": "MIT",
   "dependencies": {
+    "@sr/gltf": "workspace:*",
     "@babylonjs/core": "^4.2.0",
-    "@babylonjs/loaders": "^4.2.0"
+    "@babylonjs/loaders": "^4.2.0",
+    "gl-matrix": "^3.3.0"
   },
   "devDependencies": {
     "copy-webpack-plugin": "^8.1.1",

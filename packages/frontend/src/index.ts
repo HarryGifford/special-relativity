@@ -14,7 +14,7 @@ import { createCamera } from "./camera";
 import { initSkybox } from "./skybox";
 import { definesFromUiState, getUniformParams } from "./utils";
 import { initShaders } from "./shaders";
-
+import {} from "./base";
 type Config = {
   el: HTMLElement;
   sceneFilename: string;

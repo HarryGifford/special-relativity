@@ -1,0 +1,27 @@
+{
+  "name": "@sr/gltf",
+  "version": "0.1.0",
+  "description": "",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/HarryGifford/special-relativity",
+    "directory": "./packages/gltf"
+  },
+  "keywords": [
+    "special relativity",
+    "glsl",
+    "webpack"
+  ],
+  "author": "Harry Gifford <harrygifford92@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+  },
+  "devDependencies": {
+    "typescript": "^4.2.4"
+  }
+}
