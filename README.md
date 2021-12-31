@@ -13,6 +13,8 @@ page uses WebGL. If you cannot use WebGL, there is a video
 Accelerating along a street at at relativistic speeds. You can see the
 geometric effects of [abberation](https://en.wikipedia.org/wiki/Relativistic_aberration) and [Terrell rotation](https://en.wikipedia.org/wiki/Terrell_rotation).
 
+See `overview.ipynb` for details of the math (which unfortunately can't be rendered in README markdown.)
+
 ## Usage
 
 Go to the live demo above. You can rotate with the mouse and you can move the
@@ -62,24 +64,18 @@ and time dilation.
 
 ## Development
 
-There is one main package, although it is structured as a mono-repo so that
-it's easy to add new packages. You will find the main project under
-`packages/frontend`.
-
-First run `pnpm install` to install all the dependencies and then go to
-`packages/frontend` and run `pnpm run start` to load the page.
+First run `pnpm install` to install all the dependencies and then run `pnpm run start` to start a live demo on your computer.
 
 The directory `utils` contains packages related to development or that
 only need to be built/executed infrequently. For example
 `wavelength-color-map` is used to generate the texture for mapping
 Doppler shifted colors.
 
-## Overview
+## Overview of code
 
-The code is under `packages/frontend`.
+The code is located under `src` and `static`. The project uses [babylonjs](https://www.babylonjs.com/) to provide a basic engine and to load the GLTF model. We use shaders to apply the actual special relativistic transformations.
 
-This project uses [babylonjs](https://www.babylonjs.com/) to provide a basic
-engine and to load the GLTF model.
+If you are interested in the actual code that transforms geometry according to special relativity, go to `static/main.vert` and to see the code that transforms the colors, go to `static/main.frag`. This will require knowledge of Shaders.
 
 `static/main.vert` is the GLSL shader that applies the Lorentz transform
 to the vertices.

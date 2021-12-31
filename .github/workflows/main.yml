@@ -21,10 +21,10 @@ jobs:
         uses: peaceiris/actions-gh-pages@v3.7.3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: './packages/frontend/dist'
+          publish_dir: './dist'
       - name: Deploy Azure page
         uses: azure/webapps-deploy@v2
         with:
           app-name: special-relativity-demo-01
           publish-profile: ${{ secrets.SPECIAL_RELATIVITY_DEMO_01 }}
-          package: './packages/frontend/dist'
+          package: './dist'

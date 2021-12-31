@@ -1,12 +1,17 @@
 {
   "private": true,
-  "name": "special-relativity",
+  "name": "hg-special-relativity",
   "version": "1.0.0",
   "description": "WebGL demo to View effects of special relativity such as Terrell rotation, relativistic beaming and Doppler shift.",
+  "main": "dist/index.js",
   "scripts": {
-    "build": "cd packages/frontend && pnpm run build:prod && cd ../..",
-    "preinstall": "npx only-allow pnpm",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "webpack",
+    "build:prod": "NODE_ENV=production webpack",
+    "build:dev": "NODE_ENV=development webpack",
+    "build:profile": "NODE_ENV=production webpack --profile --json > stats.json",
+    "clean": "rimraf dist",
+    "start": "webpack serve",
+    "preinstall": "npx only-allow pnpm"
   },
   "repository": {
     "type": "git",
@@ -17,14 +22,21 @@
     "terrell rotation",
     "relativistic effects",
     "doppler",
-    "glsl",
-    "webpack"
+    "glsl"
   ],
   "author": "Harry Gifford <harrygifford92@gmail.com>",
   "license": "MIT",
+  "dependencies": {
+    "@babylonjs/core": "^4.2.0",
+    "@babylonjs/loaders": "^4.2.0"
+  },
   "devDependencies": {
-    "@hegi/tsconfig": "workspace:*",
+    "copy-webpack-plugin": "^8.1.1",
     "rimraf": "^3.0.2",
-    "typescript": "^4.2.4"
+    "ts-loader": "^9.1.2",
+    "typescript": "^4.2.4",
+    "webpack": "^5.37.0",
+    "webpack-cli": "^4.7.0",
+    "webpack-dev-server": "^3.11.2"
   }
 }
