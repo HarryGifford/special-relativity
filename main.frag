@@ -198,7 +198,7 @@ float beamingIntensity(float abberationFactor) {
 
 /** Compute abberation factor between a normalized direction and velocity. */
 float computeAbberationFactor(vec3 dir, vec3 v) {
-    #ifdef GALILEAN
+#ifdef GALILEAN
     float gamma = 1.;
 #else
     float gamma = 1./(1. - dot(v, v));
@@ -237,14 +237,14 @@ vec4 boost(vec4 q, vec3 v) {
         return q;
     }
 #ifdef GALILEAN
-    return vec4(x - t*v, t);
+    float gamma = 1.0;
 #else
     float gamma = 1./sqrt(1. - vSq);
+#endif
     float vx = dot(v, x);
     vec3 xp = x + ((gamma - 1.) / vSq * vx - t * gamma) * v;
     float tp = gamma * (t - vx);
     return vec4(xp, tp);
-#endif
 }
 
 /** Get the relative velocity of the object in camera space. */
