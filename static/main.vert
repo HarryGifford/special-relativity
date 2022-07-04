@@ -51,57 +51,31 @@ vec4 boost(vec4 q, vec3 v) {
         return q;
     }
 #ifdef GALILEAN
-    return vec4(x - t*v, t);
+    float gamma = 1.0;
 #else
     float gamma = 1./sqrt(1. - vSq);
+#endif
     float vx = dot(v, x);
     vec3 xp = x + ((gamma - 1.) / vSq * vx - t * gamma) * v;
     float tp = gamma * (t - vx);
     return vec4(xp, tp);
-#endif
 }
 
-/**
- * Compute the time the light was emitted from the source vertex that
- * reaches the camera at time 0.
- *
- * This function has a bunch of cases due to the allowed input parameters.
- */
-float eventTime(float t, vec3 x, vec3 v) {
-#ifdef NO_TIME_DELAY
-#ifdef GALILEAN
-    return t;
-#else
 
-#ifdef SIMULTANEITY_FRAME_WORLD
-    // Simultaneous events in the world's frame.
-    return t;
-#endif
-#ifdef SIMULTANEITY_FRAME_CAMERA
+/**
+ * Compute t' for one reference frame given t in the moving
+ * frame.
+ */
+float findTInv(float t, vec3 x, vec3 v) {
 #ifdef GALILEAN
     float invGamma = 1.;
 #else
     float vSq = dot(v, v);
     float invGamma = sqrt(1. - vSq);
 #endif // GALILEAN
-    // Simultaneous events in the camera's frame.
+    // Simultaneous events in the moving frame.
     // Solve t' = gamma * (t - <v,x>), for t.
     return t * invGamma + dot(v, x);
-#endif
-
-#endif
-#else
-#ifdef GALILEAN
-    float b = dot(v, x);
-    float t1 = -b - sqrt(b*b + dot(x, x));
-    return t + t1;
-#else
-    // Time taken for light to reach the camera is just the distance
-    // to reach the point where the light was emitted. Here we assume
-    // the camera is located at the origin.
-    return t - length(x);
-#endif // GALILEAN
-#endif // NO_TIME_DELAY
 }
 
 /**
@@ -120,6 +94,32 @@ vec3 velocityAdd(vec3 u, vec3 v) {
     float vSq = dot(v, v);
     float invGamma = sqrt(1. - vSq);
     return 1./(1. + uv) * (invGamma * u + v + 1./(invGamma + 1.)*uv*v);
+}
+
+/**
+ * Compute the time the light was emitted from the source vertex that
+ * reaches the camera at time 0.
+ *
+ * This function has a bunch of cases due to the allowed input parameters.
+ */
+float eventTime(float t, vec3 x, vec3 v, vec3 u) {
+    // No time delay is used for showing what things look like
+    // when we don't account for delay in the light reaching
+    // the camera from the source.
+#ifdef NO_TIME_DELAY
+    vec3 referenceVelocity;
+#ifdef SIMULTANEITY_FRAME_WORLD
+    referenceVelocity = u;
+#elif SIMULTANEITY_FRAME_CAMERA
+    referenceVelocity = velocityAdd(v, u);
+#endif
+    return findTInv(t, x, referenceVelocity);
+#else
+    // Time taken for light to reach the camera is just the distance
+    // to reach the point where the light was emitted. Here we assume
+    // the camera is located at the origin.
+    return -length(x);
+#endif
 }
 
 void main() {
@@ -147,8 +147,10 @@ void main() {
     // Transform velocities into eye space.
     vec3 v = mat3(view) * velocity;
     vec3 u = mat3(view) * objectVelocity;
-    // Intersection event time.
-    float tEvent = eventTime(0., vPosition.xyz, velocityAdd(v, u));
+    // Intersection event time. We need a particular time that the
+    // ray of light was emitted from the source, or equivalently,
+    // when it reached the camera.
+    float tEvent = eventTime(0., vPosition.xyz, v, u);
     // Perform the boost.
     vec4 tx1 = vec4(vPosition.xyz, tEvent);
     tx1 = boost(tx1, u);
