@@ -13,7 +13,7 @@ page uses WebGL. If you cannot use WebGL, there is a video
 Accelerating along a street at at relativistic speeds. You can see the
 geometric effects of [abberation](https://en.wikipedia.org/wiki/Relativistic_aberration) and [Terrell rotation](https://en.wikipedia.org/wiki/Terrell_rotation).
 
-See `overview.ipynb` for details of the math (which unfortunately can't be rendered in README markdown.)
+See [Explanation](/explanation.md) for details on the math.
 
 ## Usage
 
@@ -92,7 +92,7 @@ I used the fantastic [Relativity visualized](https://www.spacetimetravel.org/tom
 
 See [Chapter 4 of Daniel Weiskopf's dissertation](https://publikationen.uni-tuebingen.de/xmlui/bitstream/handle/10900/48159/pdf/01dissertation.pdf) for a great and detailed treatment.
 
-Similar to [A Slower Speed of Light](http://gamelab.mit.edu/games/a-slower-speed-of-light/) although I didn't use their code because I wanted to understand relativity myself.
+Similar to [A Slower Speed of Light](http://gamelab.mit.edu/games/a-slower-speed-of-light/).
 
 Sponza model take from [glTF-Sample-Models](https://github.com/KhronosGroup/glTF-Sample-Models/tree/master/2.0/Sponza).
 
@@ -119,7 +119,7 @@ Background from [NASA/Goddard Space Flight Center Scientific Visualization Studi
   passing it to the babylon loader. The second is to subdivide large triangles
   automatically so that straight surfaces transform correctly.
 
-- The Galilean relativity isn't correct.
+- The Galilean relativity isn't quite correct. In particular, the background isn't transforming the same as the foreground.
 
 ## Contributions
 
