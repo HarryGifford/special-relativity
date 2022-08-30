@@ -24,19 +24,20 @@
     "doppler",
     "glsl"
   ],
-  "author": "Harry Gifford <harrygifford92@gmail.com>",
+  "author": "Harry Gifford <harry@gifford.eu>",
   "license": "MIT",
   "dependencies": {
-    "@babylonjs/core": "^4.2.0",
-    "@babylonjs/loaders": "^4.2.0"
+    "@babylonjs/core": "^5.21.0",
+    "@babylonjs/loaders": "^5.21.0",
+    "babylonjs-gltf2interface": "^5.21.0"
   },
   "devDependencies": {
-    "copy-webpack-plugin": "^8.1.1",
+    "copy-webpack-plugin": "^11.0.0",
     "rimraf": "^3.0.2",
-    "ts-loader": "^9.1.2",
-    "typescript": "^4.2.4",
-    "webpack": "^5.37.0",
-    "webpack-cli": "^4.7.0",
-    "webpack-dev-server": "^3.11.2"
+    "ts-loader": "^9.3.1",
+    "typescript": "^4.8.2",
+    "webpack": "^5.74.0",
+    "webpack-cli": "^4.10.0",
+    "webpack-dev-server": "^4.10.1"
   }
 }

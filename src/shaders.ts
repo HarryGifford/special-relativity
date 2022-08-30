@@ -24,6 +24,8 @@ export const initShaders = ({ scene, rgbMapTexture }: ShaderConfig) => {
   );
   const materials = validMeshes.map((mesh) => mesh.material);
   const definesChange = (defines: string[]) => {
+    // Need to filter out empty defines for some reason...
+    defines = defines.filter(x => x !== "");
     for (let i = 0; i < materials.length; i++) {
       const material = materials[i];
       const mesh = validMeshes[i];
@@ -131,7 +133,7 @@ const updateShaderMaterial = (
         "objectVelocity"
       ],
       samplers: Object.keys(samplers),
-      defines,
+      defines
     }
   );
   Object.entries(samplers).map(([name, texture]) => {

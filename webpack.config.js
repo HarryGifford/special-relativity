@@ -16,14 +16,21 @@ module.exports = {
   cache: false,
   devtool: isEnvDevelopment ? "eval-source-map" : "source-map",
   devServer: {
-    contentBase: ["static"],
+    client: {
+      overlay: true,
+      progress: true
+    },
+    devMiddleware: {
+      publicPath: "/"
+    },
+    static: {
+      directory: path.resolve(__dirname, "static"),
+      watch: true
+    },
     host: "0.0.0.0",
     https: isHttps,
     open: true,
-    overlay: true,
-    publicPath: "/",
-    port: isHttps ? 4001 : 3000,
-    watchContentBase: true,
+    port: isHttps ? 4001 : 3000
   },
   mode: isEnvDevelopment ? "development" : "production",
   module: {
