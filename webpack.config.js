@@ -1,6 +1,7 @@
 //@ts-check
 
 const CopyWebpackPlugin = require("copy-webpack-plugin");
+const HtmlWebpackPlugin = require('html-webpack-plugin')
 const path = require("path");
 
 const isEnvDevelopment = process.env.NODE_ENV !== "production";
@@ -11,7 +12,7 @@ module.exports = {
   entry: "./src/bootstrap",
   output: {
     path: path.resolve(__dirname, "dist"),
-    filename: "bootstrap.js",
+    filename: isEnvDevelopment ? "[name].js" : "[id].[contenthash].js"
   },
   cache: false,
   devtool: isEnvDevelopment ? "eval-source-map" : "source-map",
@@ -45,8 +46,15 @@ module.exports = {
   resolve: {
     extensions: [".tsx", ".ts", ".js"],
   },
-  plugins: [new CopyWebpackPlugin({ patterns: ["static"] })],
-  experiments: {
-    syncWebAssembly: true,
-  },
+  plugins: [
+    new CopyWebpackPlugin({
+      patterns: [
+        {
+          from: "static",
+          globOptions: { ignore: ["**/index.html"] }
+        }
+      ]
+    }),
+    new HtmlWebpackPlugin({ template: "static/index.html" })
+  ]
 };

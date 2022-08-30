@@ -24,8 +24,6 @@ export const initShaders = ({ scene, rgbMapTexture }: ShaderConfig) => {
   );
   const materials = validMeshes.map((mesh) => mesh.material);
   const definesChange = (defines: string[]) => {
-    // Need to filter out empty defines for some reason...
-    defines = defines.filter(x => x !== "");
     for (let i = 0; i < materials.length; i++) {
       const material = materials[i];
       const mesh = validMeshes[i];
@@ -85,7 +83,8 @@ const updateShaderMaterial = (
   userDefines: string[]
 ) => {
   const samplers: Record<string, BaseTexture> = {};
-  const defines = [...userDefines];
+  // Need to filter out empty defines for some reason...
+  const defines = [...userDefines.filter(x => x !== "")];
   if (material instanceof PBRMaterial) {
     // Take the pre-defined samplers.
     if (material.albedoTexture != null) {
