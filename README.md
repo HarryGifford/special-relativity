@@ -13,7 +13,22 @@ page uses WebGL. If you cannot use WebGL, there is a video
 Accelerating along a street at at relativistic speeds. You can see the
 geometric effects of [abberation](https://en.wikipedia.org/wiki/Relativistic_aberration) and [Terrell rotation](https://en.wikipedia.org/wiki/Terrell_rotation).
 
-See `overview.ipynb` for details of the math (which unfortunately can't be rendered in README markdown.)
+See [overview.md](/overview.md) for details of the math (which unfortunately can't be rendered in README markdown.)
+
+## Overview of code
+
+The code is located under `src` and `static`. The project uses [babylonjs](https://www.babylonjs.com/) to provide a basic engine and to load the GLTF model. We use shaders to apply the actual special relativistic transformations.
+
+If you are interested in the actual code that transforms geometry according to special relativity, go to `static/main.vert` and to see the code that transforms the colors, go to `static/main.frag`. This will require knowledge of Shaders.
+
+`static/main.vert` is the GLSL shader that applies the Lorentz transform
+to the vertices.
+
+`static/frag.glsl` is a basic diffuse shader. Nothing special in here.
+
+`src/camera.ts` contains code to control the camera and how quickly it speeds
+up and slows down so that the acceleration is smooth. I decided to work in
+proper velocity instead of regular velocity since it made for smoother motion.
 
 ## Usage
 
@@ -71,33 +86,16 @@ only need to be built/executed infrequently. For example
 `wavelength-color-map` is used to generate the texture for mapping
 Doppler shifted colors.
 
-## Overview of code
-
-The code is located under `src` and `static`. The project uses [babylonjs](https://www.babylonjs.com/) to provide a basic engine and to load the GLTF model. We use shaders to apply the actual special relativistic transformations.
-
-If you are interested in the actual code that transforms geometry according to special relativity, go to `static/main.vert` and to see the code that transforms the colors, go to `static/main.frag`. This will require knowledge of Shaders.
-
-`static/main.vert` is the GLSL shader that applies the Lorentz transform
-to the vertices.
-
-`static/frag.glsl` is a basic diffuse shader. Nothing special in here.
-
-`src/camera.ts` contains code to control the camera and how quickly it speeds
-up and slows down so that the acceleration is smooth. I decided to work in
-proper velocity instead of regular velocity since it made for smoother motion.
-
 ## Sources
 
-I used the fantastic [Relativity visualized](https://www.spacetimetravel.org/tompkins/tompkins.html) site to get a better understanding and for the idea of rendering a bunch of dice.
+* [Relativity visualized](https://www.spacetimetravel.org/tompkins/tompkins.html).
+* [Chapter 4 of Daniel Weiskopf's dissertation](https://publikationen.uni-tuebingen.de/xmlui/bitstream/handle/10900/48159/pdf/01dissertation.pdf#page=25).
+* Sponza model take from [glTF-Sample-Models](https://github.com/KhronosGroup/glTF-Sample-Models/tree/master/2.0/Sponza).
+* Background from [NASA/Goddard Space Flight Center Scientific Visualization Studio](https://svs.gsfc.nasa.gov/cgi-bin/details.cgi?aid=4851).
 
-See [Chapter 4 of Daniel Weiskopf's dissertation](https://publikationen.uni-tuebingen.de/xmlui/bitstream/handle/10900/48159/pdf/01dissertation.pdf) for a great and detailed treatment.
+### Additional resources
 
 Similar to [A Slower Speed of Light](http://gamelab.mit.edu/games/a-slower-speed-of-light/) although I didn't use their code because I wanted to understand relativity myself.
-
-Sponza model take from [glTF-Sample-Models](https://github.com/KhronosGroup/glTF-Sample-Models/tree/master/2.0/Sponza).
-
-Background from [NASA/Goddard Space Flight Center Scientific Visualization Studio](
-  https://svs.gsfc.nasa.gov/cgi-bin/details.cgi?aid=4851).
 
 ## Known issues
 
