@@ -7,24 +7,17 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
-      - uses: actions/setup-node@v1
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
         with:
-          node-version: 14.x
-          registry-url: https://registry.npmjs.org/
-      - run: npm install -g pnpm
+          node-version: 18
+          cache: 'pnpm'
       - run: pnpm install
       - run: pnpm run build
         env:
           NODE_ENV: production
       - name: Deploy GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3.7.3
+        uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: './dist'
-      - name: Deploy Azure page
-        uses: azure/webapps-deploy@v2
-        with:
-          app-name: special-relativity-demo-01
-          publish-profile: ${{ secrets.SPECIAL_RELATIVITY_DEMO_01 }}
-          package: './dist'
