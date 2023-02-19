@@ -32,10 +32,11 @@
   "engines": {
     "pnpm": ">=7.24.2"
   },
+  "packageManager": "pnpm@7.27.1",
   "dependencies": {
-    "@babylonjs/core": "^5.46.0",
-    "@babylonjs/loaders": "^5.46.0",
-    "babylonjs-gltf2interface": "^5.46.0"
+    "@babylonjs/core": "^5.47.0",
+    "@babylonjs/loaders": "^5.47.0",
+    "babylonjs-gltf2interface": "^5.47.0"
   },
   "devDependencies": {
     "copy-webpack-plugin": "^11.0.0",
