@@ -4,7 +4,7 @@ export const initSkybox = async (scene: Scene) => {
   const cubeTexture = new EquiRectangularCubeTexture(
     "space/starmap_2020.jpg",
     scene,
-    1024
+    2048
   );
 
   cubeTexture.coordinatesMode = Texture.SKYBOX_MODE;
