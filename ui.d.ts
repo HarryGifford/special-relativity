@@ -3,7 +3,7 @@ export declare const enum SimultaneityFrame {
     camera = 1
 }
 /** UI configuration used in this demo. */
-export declare type UiState = {
+export type UiState = {
     /** Fraction of the speed of light the camera is traveling at. */
     cameraBeta: number;
     /** Use a fixed velocity as the speed of light. */
@@ -30,7 +30,7 @@ export declare type UiState = {
 export declare const getState: () => UiState;
 export declare const getSceneUrl: () => string;
 export declare const initSpeedIndicator: (el: HTMLElement) => HTMLDivElement;
-export declare type UiConfig = {
+export type UiConfig = {
     el: HTMLElement;
     onStateChange?: (config: UiState) => void;
 };

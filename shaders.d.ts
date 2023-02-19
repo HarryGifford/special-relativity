@@ -1,6 +1,6 @@
 import { Scene, BaseTexture } from "@babylonjs/core";
 import { UniformParams } from "./utils";
-export declare type ShaderConfig = {
+export type ShaderConfig = {
     scene: Scene;
     rgbMapTexture: BaseTexture;
 };

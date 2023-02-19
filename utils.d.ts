@@ -1,7 +1,7 @@
 import { DirectionalLight, ShaderMaterial, Vector3 } from "@babylonjs/core";
 import { RelativisticCamera } from "./camera";
 import { SimultaneityFrame } from "./ui";
-export declare type UniformParams = {
+export type UniformParams = {
     int?: Record<string, number>;
     float?: Record<string, number>;
     vec3?: Record<string, Vector3>;
