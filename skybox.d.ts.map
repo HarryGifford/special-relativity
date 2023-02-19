@@ -1,1 +1,1 @@
-{"version":3,"file":"skybox.d.ts","sourceRoot":"","sources":["../src/skybox.ts"],"names":[],"mappings":"AAAA,OAAO,EAAW,KAAK,EAA8B,MAAM,iBAAiB,CAAC;AAE7E,eAAO,MAAM,UAAU,UAAiB,KAAK,kBAc5C,CAAC"}
+{"version":3,"file":"skybox.d.ts","sourceRoot":"","sources":["../src/skybox.ts"],"names":[],"mappings":"AAAA,OAAO,EAAW,KAAK,EAA8B,MAAM,iBAAiB,CAAC;AAE7E,eAAO,MAAM,UAAU,UAAiB,KAAK,kBAqB5C,CAAC"}
