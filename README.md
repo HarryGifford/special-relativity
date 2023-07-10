@@ -2,6 +2,8 @@
 
 [**Live WebGL demo**](https://harrygifford.github.io/special-relativity/)
 
+[**Simple single HTML version**](https://harrygifford.github.io/special-relativity/simple.html). Source located under [`static/simple.html`](/static/simple.html). You may find this version easier if you just want to see how the transformation works and apply it to your own projects. It is completely self contained and has no external dependencies.
+
 This project shows how the geometry of the world looks under
 special relativistic transformations. You can see a live demo
 [here](https://harrygifford.github.io/special-relativity/). You can see effects such as Terrell rotation, Doppler shifting and the headlight effect. Note that the
@@ -13,7 +15,7 @@ page uses WebGL. If you cannot use WebGL, there is a video
 Accelerating along a street at at relativistic speeds. You can see the
 geometric effects of [abberation](https://en.wikipedia.org/wiki/Relativistic_aberration) and [Terrell rotation](https://en.wikipedia.org/wiki/Terrell_rotation).
 
-See [Explanation](/explanation.md) for details on the math.
+See [Explanation](/explanation.md) for details on the math as well as for information on how to add this to your own code.
 
 ## Usage
 
