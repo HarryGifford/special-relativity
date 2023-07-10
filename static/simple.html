@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>Simple example showing Terrell rotation</title>
+  <style>
+    canvas {
+      width: 1280px;
+      height: 800px;
+    }
+  </style>
+</head>
+
+<body>
+  <div>
+    Below shows a set of cubes moving at 0.95c (95% of the speed of light.)
+    The top row shows the cubes moving without relativistic corrections.
+    <br>
+    The bottom row shows the cubes moving with relativistic corrections.
+  </div>
+  <canvas id="canvas"></canvas>
+  <script>
+    //@ts-check
+
+    /**
+     * Create a triangulated flat plane, subdivided into 2 * n * n triangles.
+     */
+    function generateSquareTriangleMesh(n, axis, dir, vertices, normals, indices, colors) {
+      // Distance between each vertex.
+      const step = 1 / (n - 1);
+
+      const startIdx = vertices.length / 3;
+
+      for (let row = 0; row < n; row++) {
+        for (let col = 0; col < n; col++) {
+          const a = col * step - 0.5;
+          const b = row * step - 0.5;
+          const c = (dir ? 0 : 1) - 0.5;
+
+          const normalDir = dir ? -1 : 1;
+
+          switch (axis) {
+            case 0:
+              vertices.push(a, b, c);
+              normals.push(0, 0, normalDir);
+              colors.push(.6, .6, .9);
+              break;
+            case 1:
+              vertices.push(b, c, a);
+              normals.push(0, normalDir, 0);
+              colors.push(.9, .6, .6);
+              break;
+            case 2:
+              vertices.push(c, a, b);
+              normals.push(normalDir, 0, 0);
+              colors.push(.6, .9, .6);
+              break;
+          }
+        }
+      }
+
+      for (let row = 0; row < n - 1; row++) {
+        for (let col = 0; col < n - 1; col++) {
+          const v0 = startIdx + row * n + col;
+          const v1 = v0 + 1;
+          const v2 = v0 + n;
+          const v3 = v2 + 1;
+
+          // Triangle winding order should be counter-clockwise
+          // from the outside.
+          if (dir) {
+            indices.push(v0, v2, v1);
+            indices.push(v1, v2, v3);
+          } else {
+            indices.push(v0, v1, v2);
+            indices.push(v1, v3, v2);
+          }
+        }
+      }
+    }
+
+    /**
+     * Create a unit cube at the origin with n x n vertices for each face.
+     */
+    function generateCubeMesh(n) {
+      const data = { vertices: [], normals: [], indices: [], colors: [] };
+      for (let i = 0; i < 6; i++) {
+        const axis = Math.floor(i / 2);
+        const dir = i % 2;
+        generateSquareTriangleMesh(n, axis, dir, data.vertices, data.normals, data.indices, data.colors);
+      }
+      return data;
+    }
+
+    /** Representation of a transformation a 4x4 matrix. */
+    class Transform {
+      constructor() {
+        // Store the matrix a 16 element array. The elements are in
+        // column major order.
+        this.m_transform = new Float32Array(16);
+        this.setIdentity();
+      }
+
+      /** Get the transformation matrix as an array in column major order. */
+      getMatrix() { return this.m_transform; }
+
+      /** Initialize the transform to the origin with no rotation. */
+      setIdentity() {
+        for (let i = 0; i < 16; i++) {
+          this.m_transform[i] = i % 5 == 0 ? 1 : 0;
+        }
+      }
+
+      /** Initialize the transform as a perspective transform. */
+      setPerspective(fovy, aspectRatio, near, far) {
+        const a = this.m_transform;
+        const invF = 1 / Math.tan(fovy / 2);
+        const nf = 1 / (near - far);
+
+        a[0] = invF / aspectRatio; a[4] = 0; a[8] = 0; a[12] = 0;
+        a[1] = 0; a[5] = invF; a[9] = 0; a[13] = 0;
+        a[2] = 0; a[6] = 0; a[10] = (far + near) * nf; a[14] = 2 * far * near * nf;
+        a[3] = 0; a[7] = 0; a[11] = -1; a[15] = 0;
+      }
+
+      /** Translate the current position by the given vector. */
+      translate(v) {
+        const x = v[0]; const y = v[1]; const z = v[2];
+        const a = this.m_transform;
+        a[12] += a[0] * x + a[4] * y + a[8] * z;
+        a[13] += a[1] * x + a[5] * y + a[9] * z;
+        a[14] += a[2] * x + a[6] * y + a[10] * z;
+        a[15] += a[3] * x + a[7] * y + a[11] * z;
+      }
+    }
+
+    /** Main class for rendering a hardcoded scene. */
+    class SpecialRelativityRenderer {
+      /** How fast the objects travel as a percent of speed of light. */
+      velocity = new Float32Array([0.95, 0, 0]);
+      /** Use zero velocity to render without relativistic effects. */
+      zeroVelocity = new Float32Array([0, 0, 0]);
+
+      /** Vertex shader applies the Lorentz transform. */
+      vertShaderSrc = `#version 300 es
+        precision highp float;
+        in vec3 aPosition;
+        in vec3 aNormal;
+        in vec3 aColor;
+
+        out vec3 position;
+        out vec3 normal;
+        out vec3 color;
+
+        uniform vec3 uVelocity;
+        uniform mat4 uProjectionMatrix;
+        uniform mat4 uModelViewMatrix;
+
+        /**
+        * Apply Lorentz/Galilean contraction to the given vector.
+        *
+        * Here I've just multiplied out the matrix to avoid explicit construction.
+        * Taken from B matrix from:
+        * https://en.wikipedia.org/wiki/Lorentz_transformation#Proper_transformations
+        * q is the position to transform. q.w is the time component.
+        * v is the velocity.
+        */
+        vec4 boost(vec4 q, vec3 v) {
+            vec3 x = q.xyz;
+            float t = q.w;
+            float vSq = dot(v, v);
+            if (vSq < 1e-3) {
+                return q;
+            }
+            float gamma = 1./sqrt(1. - vSq);
+            float vx = dot(v, x);
+            vec3 xp = x + ((gamma - 1.) / vSq * vx - t * gamma) * v;
+            float tp = gamma * (t - vx);
+            return vec4(xp, tp);
+        }
+
+        void main() {
+            vec4 worldPosition = uModelViewMatrix * vec4(aPosition, 1.0);
+            worldPosition.x += 2.0f * float(gl_InstanceID);
+
+            float t = -length(worldPosition.xyz);
+            vec4 q = vec4(worldPosition.xyz, t);
+            vec4 relativisticWorldPosition = boost(q, uVelocity.xyz);
+            relativisticWorldPosition.w = 1.0;
+
+            position = worldPosition.xyz;
+            gl_Position = uProjectionMatrix * relativisticWorldPosition;
+            normal = (uModelViewMatrix * vec4(aNormal, 0.0)).xyz;
+            color = aColor;
+        }
+        `;
+      /**
+       * Only need a really basic fragment shader to set the color
+       *based on a single directional light.
+       */
+      fragShaderSrc = `#version 300 es
+        precision highp float;
+        in vec3 position;
+        in vec3 normal;
+        in vec3 color;
+        out vec4 fragColor;
+
+        const vec3 lightDir = normalize(vec3(1., 1., 1.));
+
+        void main() {
+            float intensity = max(0.1, dot(lightDir, normalize(normal)));
+            // Normally we'd need to do gamma correction, but because
+            // we have no complex lighting, it's unnecessary here.
+            fragColor = vec4(intensity * color, 1.0);
+        }
+        `;
+
+      constructor(canvasId) {
+        const canvas = document.querySelector(canvasId);
+        if (canvas == null) { throw new Error("Canvas not found."); }
+        this.width = 1280;
+        this.height = 800;
+        canvas.width = this.width;
+        canvas.height = this.height;
+        const gl = canvas.getContext("webgl2");
+        if (gl == null) { throw new Error("Couldn't create WebGL context."); }
+        this.gl = gl;
+
+        gl.enable(gl.DEPTH_TEST);
+        gl.enable(gl.CULL_FACE);
+        gl.cullFace(gl.BACK);
+
+        const program = gl.createProgram();
+        if (program == null) { throw new Error("Couldn't create program."); }
+        this.program = program;
+
+        this._createAndAttachShader(gl.VERTEX_SHADER, this.vertShaderSrc);
+        this._createAndAttachShader(gl.FRAGMENT_SHADER, this.fragShaderSrc);
+        gl.linkProgram(program);
+
+        this.projectionMatrixLocation = gl.getUniformLocation(program, "uProjectionMatrix");
+        this.modelViewMatrixLocation = gl.getUniformLocation(program, "uModelViewMatrix");
+        this.velocityLocation = gl.getUniformLocation(program, "uVelocity");
+
+        // Number of vertex indices used for rendering.
+        // We set this in `_initScene`.
+        this.numIndices = -1;
+
+        this._initScene();
+      }
+
+      _createAndAttachShader(shaderType, source) {
+        const gl = this.gl;
+        const shader = gl.createShader(shaderType);
+        if (shader == null) {
+          throw new Error("Couldn't create shader.");
+        }
+        gl.shaderSource(shader, source);
+        gl.compileShader(shader);
+        const shaderLog = gl.getShaderInfoLog(shader);
+        if (shaderLog) { console.warn(shaderLog); }
+        gl.attachShader(this.program, shader);
+        gl.deleteShader(shader);
+      }
+
+      /** Setup one-time stuff used for rendering. */
+      _initScene() {
+        const gl = this.gl;
+        const program = this.program;
+        const { vertices, normals, indices, colors } = generateCubeMesh(6);
+        this.numIndices = indices.length;
+
+        // Buffers setup.
+        const indexBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint32Array(indices), gl.STATIC_DRAW);
+
+        const positionBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+
+        const positionAttributeLocation = gl.getAttribLocation(program, "aPosition");
+        gl.enableVertexAttribArray(positionAttributeLocation);
+        gl.vertexAttribPointer(positionAttributeLocation, 3, gl.FLOAT, true, 0, 0);
+
+        const normalBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(normals), gl.STATIC_DRAW);
+
+        const normalAttributeLocation = gl.getAttribLocation(program, "aNormal");
+        gl.enableVertexAttribArray(normalAttributeLocation);
+        gl.vertexAttribPointer(normalAttributeLocation, 3, gl.FLOAT, true, 0, 0);
+
+        const colorBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
+
+        const colorAttributeLocation = gl.getAttribLocation(program, "aColor");
+        gl.enableVertexAttribArray(colorAttributeLocation);
+        gl.vertexAttribPointer(colorAttributeLocation, 3, gl.FLOAT, true, 0, 0);
+
+        const projectionTransform = new Transform();
+        projectionTransform.setPerspective(70 * Math.PI / 180, this.width / this.height, 0.01, 100);
+
+        // Projection matrix doesn't change, so we only need to set it once.
+        gl.useProgram(program);
+        gl.uniformMatrix4fv(this.projectionMatrixLocation, false, projectionTransform.getMatrix());
+        gl.useProgram(null);
+      }
+
+      /** Clear the framebuffer. */
+      beginRenderScene() {
+        const gl = this.gl;
+        gl.clearColor(0.1, 0.1, 0.1, 1);
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+      }
+
+      /**
+       * Draw the scene.
+       *
+       * We show the cubes both with and without the effects of relativity.
+       */
+      renderScene(isLorentzian, modelViewMatrix) {
+        const gl = this.gl;
+        const program = this.program;
+        gl.useProgram(program);
+        // Set the uniform values for the current frame.
+        gl.uniform3fv(this.velocityLocation, isLorentzian ? this.velocity : this.zeroVelocity);
+        gl.uniformMatrix4fv(this.modelViewMatrixLocation, false, modelViewMatrix);
+        // Render the cube multiple times. gl_InstanceID can be used in the shader
+        // to access the current cube being rendered.
+        gl.drawElementsInstanced(gl.TRIANGLES, this.numIndices, gl.UNSIGNED_INT, 0, 30);
+        gl.useProgram(null);
+      }
+    }
+
+    const sr = new SpecialRelativityRenderer("canvas");
+
+    let startT = performance.now() / 1000;
+    let prevT = startT;
+
+    const modelViewTransform = new Transform();
+    const originalTranslation = [-30, 1, -3.9];
+    // Start in a place that looks good from the camera.
+    modelViewTransform.translate(originalTranslation);
+
+    function render(currT) {
+      // Clear the canvas.
+      sr.beginRenderScene();
+      const v = sr.velocity;
+
+      // Time in seconds.
+      let t = currT / 1000;
+      // Delta time in seconds.
+      let dt = t - prevT;
+      if (Number.isNaN(dt) || !Number.isFinite(dt) || t > 1e7) {
+        t = performance.now() / 1000;
+        dt = 0;
+      }
+      prevT = t;
+
+      // Hacky way to reset the positions of the cubes based on their
+      // separation and the velocity (but only in the x direction.)
+      if (t - startT > 2 / sr.velocity[0]) {
+        modelViewTransform.setIdentity();
+        modelViewTransform.translate(originalTranslation);
+        startT = t;
+      }
+
+      // Set the cube's base position based on the time.
+      // We use the negative velocity since the transform is
+      // actually from the camera's frame of reference.
+      const deltaDistance = [-v[0] * dt, -v[1] * dt, -v[2] * dt];
+
+      // Draw the cubes non-relativistically.
+      //const modelViewTransform = new Transform();
+      modelViewTransform.translate(deltaDistance);
+      sr.renderScene(false, modelViewTransform.getMatrix());
+
+      // Move the cubes up. y axis from top of screen to bottom by default.
+      modelViewTransform.translate([0, -2, 0]);
+
+      // Draw the cubes relativistically.
+      sr.renderScene(true, modelViewTransform.getMatrix());
+
+      // Move the transform back.
+      modelViewTransform.translate([0, 2, 0]);
+
+      // Continue the event loop on the browser's schedule.
+      requestAnimationFrame(render);
+    }
+
+    // Start.
+    requestAnimationFrame(render);
+  </script>
+</body>
+
+</html>
