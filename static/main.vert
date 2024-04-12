@@ -10,6 +10,7 @@ attribute vec4 position;
 attribute vec3 normal;
 attribute vec4 tangent;
 attribute vec2 uv;
+attribute vec4 color;
 
 // Uniforms
 uniform mat4 view;
@@ -27,6 +28,7 @@ uniform vec3 cameraPosition;
 varying vec4 lPosition;
 varying vec4 vPosition;
 varying vec2 vUV;
+varying vec4 vColor;
 varying float t;
 #ifdef TANGENT
 varying mat3 TBN;
@@ -160,5 +162,6 @@ void main() {
     // Transform the texture coordinate verbatim.
     vUV = uv;
     t = tx1.w;
+    vColor = color;
 #endif // SKYBOX
 }

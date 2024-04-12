@@ -52,6 +52,7 @@ varying vec4 lPosition;
 // Un-Lorentz transformed variables.
 varying vec4 vPosition;
 varying vec2 vUV;
+varying vec4 vColor;
 varying float t;
 #ifdef TANGENT
 varying mat3 TBN;
@@ -276,7 +277,6 @@ vec3 computeLighting() {
 #else
     vec4 albedoColor = vec4(1.);
 #endif // ALBEDO_ENABLED
-
     vec3 diffuse = lambertian * albedoColor.rgb;
 #ifdef METALLIC_ROUGHNESS_ENABLED
     vec3 V = normalize(-vPosition.xyz);
@@ -292,6 +292,9 @@ vec3 computeLighting() {
 #else
     vec3 base = diffuse;
 #endif // METALLIC_ROUGHNESS_ENABLED
+#ifdef VERTEX_COLOR_ENABLED
+    base *= vColor.rgb;
+#endif // VERTEX_COLOR_ENABLED
     return base;
 }
 

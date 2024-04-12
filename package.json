@@ -36,7 +36,9 @@
   "dependencies": {
     "@babylonjs/core": "^7.1.0",
     "@babylonjs/loaders": "^7.1.0",
-    "babylonjs-gltf2interface": "^7.1.0"
+    "@loaders.gl/gltf": "^4.2.0",
+    "babylonjs-gltf2interface": "^7.1.0",
+    "heap-typed": "^1.52.0"
   },
   "devDependencies": {
     "copy-webpack-plugin": "^12.0.2",

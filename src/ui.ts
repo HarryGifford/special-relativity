@@ -225,8 +225,25 @@ const createScenePicker = () => {
         label: "Sponza",
         value: sponzaUrl,
       },
+      {
+        label: "test",
+        value: "./sponza/Sponza.gltf"
+      },
+      {
+        label: "Custom",
+        value: "custom",
+      }
     ],
     onChange: (value) => {
+      // Allow the user to set a custom scene.
+      if (value === "custom") {
+        const userValue = prompt("Enter a URL for a glTF scene:");
+        if (userValue == null) {
+          return;
+        }
+        value = userValue;
+      }
+
       sessionStorage.relativityScene = value;
       // Reload the browser for simplicity.
       window.location.reload();

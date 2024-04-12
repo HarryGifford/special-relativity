@@ -110,6 +110,13 @@ const updateShaderMaterial = (
     defines.push("#define SKYBOX");
   }
   samplers["rgbMapSampler"] = rgbMapTexture;
+  
+  const attributes = ["position", "normal", "tangent", "uv"];
+  if (mesh.isVerticesDataPresent(VertexBuffer.ColorKind)) {
+    attributes.push("color");
+    defines.push("#define VERTEX_COLOR_ENABLED");
+  }
+
   const shaderMaterial = new ShaderMaterial(
     "shader" + mesh.name,
     scene,
@@ -118,7 +125,7 @@ const updateShaderMaterial = (
       fragment: "custom",
     },
     {
-      attributes: ["position", "normal", "tangent", "uv"],
+      attributes,
       uniforms: [
         "world",
         "finalWorld",
@@ -145,4 +152,6 @@ const updateShaderMaterial = (
     mesh.material.dispose();
   }
   mesh.material = shaderMaterial;
+  //mesh.material.backFaceCulling = false;
+  //mesh.material.wireframe = false;
 };
